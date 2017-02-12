@@ -1,0 +1,10 @@
+# for example, almost 'ENCODE options' in STAR v2.5.1a manual, except
+# --outFilterMultimapNmax 20 -- works with 1 only for now as defined in the makefile
+
+outFilterType BySJout
+alignSJoverhangMin 8
+alignSJDBoverhangMin 1
+outFilterMismatchNmax 999
+alignIntronMin 20
+alignIntronMax 1000000
+alignMatesGapMax 1000000
