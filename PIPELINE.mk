@@ -20,6 +20,7 @@ STAR_sjdbOverhang                    := 100
 STAR_outFilterMismatchNoverReadLmax  := 0.03
 STAR_outFilterMatchNminOverLread     := 0.95
 STAR_parameters_file                 := $(PL)/STAR_custom_parameters_sample_file
+STAR_readFIlesCommand            := zcat # zcat, cat, etc
 ALIGNMENT_MODE                   := NULL # can be bowtie1, STAR_mode-0, STAR_mode-1, STAR_mode-2, STAR_mode-custom
 AMBIGOUS_MAPPING_BIAS            := filter_out # ignore, filter_out, adjust_counts
 FDR_SIMS                         := 5
@@ -76,11 +77,29 @@ $(warning SUFFIX_AMB: $(SUFFIX_AMB))
 ### PIPELINE START ###
 ######################
 
-all: $(PREFIX)_h1.mpileup $(PREFIX)_h2.mpileup
+all: $(PREFIX)_counts_noCNV_noXYM.txt $(PREFIX)_counts_ref_allele_ratios.pdf  $(PREFIX)_counts_noCNV_noXYM_ref_allele_ratios.pdf
 
+# histogram
+$(PREFIX)_counts_noCNV_noXYM_ref_allele_ratios.pdf: $(PREFIX)_counts_noCNV_noXYM.txt
+	sed 's/^#chr/chr/g' $< | Rscript $(PL)/counts_allelic_ratio_distribution_plot.R $(PREFIX)_filtered_counts
+
+# keep autosomal chr only
+$(PREFIX)_counts_noCNV_noXYM.txt: $(PREFIX)_counts_noCNV.txt
+	cat $< | python $(PL)/filter_chr.py > $@
+
+# rm CNV-sites
+$(PREFIX)_counts_noCNV.txt: $(PREFIX)_counts.txt
+	python $(PL)/filter_cnv_sites.py $(PGENOME_DIR)/$(VCF_SAMPLE_ID).alleleSeqInput.cnv $< > $@
+
+#histogram
+$(PREFIX)_counts_ref_allele_ratios.pdf: $(PREFIX)_counts.txt
+	sed 's/^#chr/chr/g' $< | Rscript $(PL)/counts_allelic_ratio_distribution_plot.R $(PREFIX)_counts
+
+# counts
+$(PREFIX)_counts.txt: $(PREFIX)_h1.mpileup $(PREFIX)_h2.mpileup
+	python $(PL)/mpileup2counts.py $(PGENOME_DIR)/$(VCF_SAMPLE_ID)_hetSNVs_h1.bed $(PGENOME_DIR)/$(VCF_SAMPLE_ID)_hetSNVs_h2.bed $(PREFIX)_h1.mpileup $(PREFIX)_h2.mpileup $(Cntthresh) > $@
 
 # pileups
-
 $(PREFIX)_h1.mpileup: $(FINAL_BAM_FILE)
 	$(SAMTOOLS) mpileup -BQ0 --max-depth 999999 -f $(PGENOME_DIR)/$(VCF_SAMPLE_ID)_h1.fa $< --positions $(PGENOME_DIR)/$(VCF_SAMPLE_ID)_hetSNVs_h1.bed --output $@
 
@@ -93,7 +112,7 @@ $(PREFIX)_STAR_mode-custom_uniqonly.Aligned.sortedByCoord.out.bam: $(READS)
 	--runThreadN $(NTHR) \
 	--genomeDir $(GenomeIdx_STAR_diploid) \
 	--readFilesIn $< \
-	--readFilesCommand zcat \
+	--readFilesCommand $(STAR_readFIlesCommand) \
 	--outFileNamePrefix $(@:Aligned.sortedByCoord.out.bam=) \
 	--outSAMattributes All \
 	--outFilterMultimapNmax 1 \
@@ -109,7 +128,7 @@ $(PREFIX)_STAR_mode-2_uniqonly.Aligned.sortedByCoord.out.bam: $(READS)
 	--genomeDir $(GenomeIdx_STAR_diploid) \
 	--twopassMode Basic \
 	--readFilesIn $< \
-	--readFilesCommand zcat \
+	--readFilesCommand $(STAR_readFIlesCommand) \
 	--outFileNamePrefix $(@:Aligned.sortedByCoord.out.bam=) \
 	--outSAMattributes All \
 	--outFilterMismatchNoverReadLmax $(STAR_outFilterMismatchNoverReadLmax) \
@@ -125,7 +144,7 @@ $(PREFIX)_STAR_mode-1_uniqonly.Aligned.sortedByCoord.out.bam: $(READS)
 	--runThreadN $(NTHR) \
 	--genomeDir $(GenomeIdx_STAR_diploid) \
 	--readFilesIn $< \
-	--readFilesCommand zcat \
+	--readFilesCommand $(STAR_readFIlesCommand) \
 	--outFileNamePrefix $(@:Aligned.sortedByCoord.out.bam=) \
 	--outSAMattributes All \
 	--outFilterMismatchNoverReadLmax $(STAR_outFilterMismatchNoverReadLmax) \
@@ -142,7 +161,7 @@ $(PREFIX)_STAR_mode-0_uniqonly.Aligned.sortedByCoord.out.bam: $(READS)
 	--runThreadN $(NTHR) \
 	--genomeDir $(GenomeIdx_STAR_diploid) \
 	--readFilesIn $< \
-	--readFilesCommand zcat \
+	--readFilesCommand $(STAR_readFIlesCommand) \
 	--outFileNamePrefix $(@:Aligned.sortedByCoord.out.bam=) \
 	--outSAMattributes All \
 	--outFilterMultimapNmax 1 \
