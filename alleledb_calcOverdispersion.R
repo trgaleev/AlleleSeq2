@@ -1,7 +1,12 @@
+#20170212 cjieming/alleleDB alleledb_v2.0 script 
+# with minor modifications to incorporate into the pipeline
+
+
+
 library(VGAM)
 ## weighted beta/binomial distribution
 # d.combined collects all results and correspond it to an allelic ratio:
-# col1=allelicRatio (based on binomial n=6, ar=0,1/6,2/6...)
+# col1=ref_allele_ratio (based on binomial n=6, ar=0,1/6,2/6...)
 # col2=corresponding weighted value in binomial distribution, i.e. pdf(n,k,p)*(num of empirical SNPs at n counts)
 nulldistrib <- function(minN,maxN,p,w,binSize,yuplimit,distrib="binomial",b=0)
 {
@@ -29,7 +34,7 @@ nulldistrib <- function(minN,maxN,p,w,binSize,yuplimit,distrib="binomial",b=0)
     {
       d.combined[ptr:length(k),1] = k/i
       d.combined[ptr:length(k),2] = d.w
-      colnames(d.combined) = c('allelicRatio','wBinDist')
+      colnames(d.combined) = c('ref_allele_ratio','wBinDist')
     }
     else
     {
@@ -89,11 +94,17 @@ nulldistrib <- function(minN,maxN,p,w,binSize,yuplimit,distrib="binomial",b=0)
 
 ################################## MAIN #######################################
 ### set parameters
-filename = "counts.min6.allelicRatio.mod.auto.txt"
-data = read.table(filename, header=T, stringsAsFactors=F)
+
+args = commandArgs(trailingOnly=TRUE)
+filename = args[2]
+ 
+data = read.table(file('stdin'), header=T, stringsAsFactors=F, comment.char="%", check.names=FALSE)
+
+print (head(data))
 
 dir.create("betabinomial")
-setwd(paste(folder,"betabinomial",sep=''))
+folder = args[1]
+setwd(paste(folder,"/betabinomial",sep=''))
 
 colors <- c("green","blue","orange","cyan","pink","purple",
             "brown","black","slategray1","violetred","tan","deeppink","darkgreen", 
@@ -103,9 +114,9 @@ colors <- c("green","blue","orange","cyan","pink","purple",
 ## binomial parameters
 p=0.5               #null probability
 minN=6             #min total num of reads (since it's left open right closed)
-# maxN=max(data$total) #max total num of reads
-if(max(data$total) < 2500){ maxN=max(data$total) }else { maxN=2500 }
-apropor = length(data$total[data$total <= 2500]) / nrow(data)
+# maxN=max(data$sum_ref_n_alt_cnts) #max total num of reads
+if(max(data$sum_ref_n_alt_cnts) < 2500){ maxN=max(data$sum_ref_n_alt_cnts) }else { maxN=2500 }
+apropor = length(data$sum_ref_n_alt_cnts[data$sum_ref_n_alt_cnts <= 2500]) / nrow(data)
 yuplimit=0.15
 binSize=40
 bins=pretty(0:1,binSize)
@@ -119,8 +130,8 @@ if((length(bins)-1)%%2 != 0){ w.grad=c(r,sort(r[1:(length(r)-1)],decreasing=TRUE
 }else { w.grad=c(r,sort(r[1:length(r)],decreasing=TRUE)) }
 
 ## empirical allelic Ratio
-data.match=data[data$total <= maxN & data$total >= minN, ]
-h = hist(data.match$allelicRatio, xlim=range(0,1),breaks=bins,right=TRUE)
+data.match=data[data$sum_ref_n_alt_cnts <= maxN & data$sum_ref_n_alt_cnts >= minN, ]
+h = hist(data.match$ref_allele_ratio, xlim=range(0,1),breaks=bins,right=TRUE)
 # plot right closed interval left open (range] for x axis
 # note that you have pseudozeroes as counts in your data so thats fine
 empirical = h$counts/sum(h$counts)
@@ -131,8 +142,8 @@ empirical = h$counts/sum(h$counts)
 ## weight each probability by the number of SNPs with n reads
 
 # weight by empirical counts
-t = as.data.frame(table(data$total), stringsAsFactors=F)
-w = matrix(0,max(data$total),1)
+t = as.data.frame(table(data$sum_ref_n_alt_cnts), stringsAsFactors=F)
+w = matrix(0,max(data$sum_ref_n_alt_cnts),1)
 
 for (jj in 1:nrow(t))
 {
@@ -148,7 +159,7 @@ d.combined.sorted.binned = nulldistrib(minN,maxN,p,w,binSize,yuplimit,distrib="b
 # sse for the binomial distrib
 # x11(width=17,height=9)
 # par(cex.axis=1.5, cex.lab=2, cex.main=2, mar=c(5,5,5,5))
-# barplot(empirical, ylab='density', xlab='allelicRatio',names.arg=h$mids, ylim=c(0,yuplimit), main=paste("n=",minN,'-',maxN))
+# barplot(empirical, ylab='density', xlab='ref_allele_ratio',names.arg=h$mids, ylim=c(0,yuplimit), main=paste("n=",minN,'-',maxN))
 # par(new=TRUE)
 # plot(d.combined.sorted.binned,ylim=c(0,yuplimit),pch=16,type='b',col='red',bty='n',ylab='',xlab='',yaxt='n',xaxt='n',yaxs="i")
 
@@ -238,7 +249,7 @@ while(flag)
   ## pseudofinal fit plot
 #   x11(width=17, height=9)
 #   par(cex.axis=1.5, cex.lab=2, cex.main=2, mar=c(5,5,5,5))
-#   barplot(empirical, ylab='density', xlab='allelicRatio', 
+#   barplot(empirical, ylab='density', xlab='ref_allele_ratio', 
 #           names.arg=h$mids, ylim=c(0,yuplimit), main=paste("n=",minN,'-',maxN))
 #   par(new=TRUE)
 #   plot(d.combined.sorted.binned,ylim=c(0,yuplimit),pch=16,type='b',col='red',
@@ -260,7 +271,7 @@ while(flag)
 # x11(width=17, height=9)
 pdf(paste(filename,"-checkgrad-",minN,"-",maxN,".pdf", sep=""),width=17, height=9)
 par(cex.axis=1.5, cex.lab=2, cex.main=2, mar=c(5,5,5,5))
-barplot(empirical, ylab='density', xlab='allelicRatio', 
+barplot(empirical, ylab='density', xlab='ref_allele_ratio', 
         names.arg=h$mids, ylim=c(0,yuplimit), main=paste("n=",minN,'-',maxN))
 par(new=TRUE)
 plot(d.combined.sorted.binned,ylim=c(0,yuplimit),pch=16,type='b',col='red',
@@ -305,8 +316,8 @@ write.table(cbind(b.choice,sse),"b_chosen.grad.txt", row.names=FALSE,sep="\t")
 # library(fitdistrplus)
 # library(MASS)
 # 
-# mu = mean(data.match$allelicRatio)
-# V = var(data.match$allelicRatio)
+# mu = mean(data.match$ref_allele_ratio)
+# V = var(data.match$ref_allele_ratio)
 # ## estimation using Jing's formulae, fixing mu=0.5
 # # V = n * mu * (1-mu) * b
 # b = V/0.25

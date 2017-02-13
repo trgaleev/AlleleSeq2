@@ -108,6 +108,7 @@ sys.stdout.write('\t'.join([
     'cT',
     'cN',
     'ref_allele_ratio',
+    'sum_ref_n_alt_cnts',
     'p_binom',
     'note_h1',
     'note_h2'
@@ -150,6 +151,7 @@ for k in hetSNV_list:
             str(basecnts['T']),
             str(basecnts['N']),
             str(float(ref_cnt)/float(tot_cnt)),
+            str(tot_cnt),
             str(pbinom),
             comment_h1,
             comment_h2

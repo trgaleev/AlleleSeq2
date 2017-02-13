@@ -1,20 +1,28 @@
+#20170212 cjieming/alleleDB alleledb_v2.0 script
+# with minor modifications to incorporate into the pipeline
+
+
+
 ## allow cmd line arguments
 args=(commandArgs(TRUE))
-args=(commandArgs(TRUE))
-if(length(args)==0){
-    FDR.thresh = 0.05
+
+folder=args[1]
+if (length(args)>2){
+	FDR.thresh = as.numeric(args[3])
 }else{
-    for(i in 1:length(args)){
-         eval(parse(text=args[[i]]))
-    }
+	FDR.thresh = 0.05
 }
+
+
+
 
 ## start script here
 library(VGAM)
 
 ### data
-filename1 = "counts.txt"
-data1 = read.table(filename1, header=T, stringsAsFactors=F)
+
+data1 = read.table(file('stdin'), header=T, stringsAsFactors=F, comment.char="%", check.names=F)
+print(head(data1))
 filename2 = "betabinomial/b_chosen.grad.txt"
 data2 = read.table(filename2, header=T, stringsAsFactors=F)
 

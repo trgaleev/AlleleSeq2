@@ -77,26 +77,31 @@ $(warning SUFFIX_AMB: $(SUFFIX_AMB))
 ### PIPELINE START ###
 ######################
 
-all: $(PREFIX)_counts_noCNV_noXYM.txt $(PREFIX)_counts_ref_allele_ratios.pdf  $(PREFIX)_counts_noCNV_noXYM_ref_allele_ratios.pdf
+all: $(PREFIX)_counts_noCNV_noXYM.tsv $(PREFIX)_counts_ref_allele_ratios.pdf  $(PREFIX)_counts_noCNV_noXYM_ref_allele_ratios.pdf interestingHets.betabinom.tsv
 
-# histogram
-$(PREFIX)_counts_noCNV_noXYM_ref_allele_ratios.pdf: $(PREFIX)_counts_noCNV_noXYM.txt
-	sed 's/^#chr/chr/g' $< | Rscript $(PL)/counts_allelic_ratio_distribution_plot.R $(PREFIX)_filtered_counts
+# this seems to work, but the way it deals with paths, filenames, etc needs to be cleaned up
+interestingHets.betabinom.tsv: $(PREFIX)_counts_noCNV_noXYM.tsv
+	cat $< | Rscript $(PL)/alleledb_calcOverdispersion.R $(CURDIR) $(PREFIX)_counts_noCNV_noXYM.tsv
+	cat $< | Rscript $(PL)/alleledb_alleleseqBetabinomial.R $(CURDIR) $(PREFIX)_counts_noCNV_noXYM.tsv $(FDR_CUTOFF)
+
+# allelic ratio distrs
+$(PREFIX)_counts_noCNV_noXYM_ref_allele_ratios.pdf: $(PREFIX)_counts_noCNV_noXYM.tsv
+	cat $< | Rscript $(PL)/counts_allelic_ratio_distribution_plot.R $(PREFIX)_filtered_counts
 
 # keep autosomal chr only
-$(PREFIX)_counts_noCNV_noXYM.txt: $(PREFIX)_counts_noCNV.txt
+$(PREFIX)_counts_noCNV_noXYM.tsv: $(PREFIX)_counts_noCNV.tsv
 	cat $< | python $(PL)/filter_chr.py > $@
 
 # rm CNV-sites
-$(PREFIX)_counts_noCNV.txt: $(PREFIX)_counts.txt
+$(PREFIX)_counts_noCNV.tsv: $(PREFIX)_counts.tsv
 	python $(PL)/filter_cnv_sites.py $(PGENOME_DIR)/$(VCF_SAMPLE_ID).alleleSeqInput.cnv $< > $@
 
-#histogram
-$(PREFIX)_counts_ref_allele_ratios.pdf: $(PREFIX)_counts.txt
-	sed 's/^#chr/chr/g' $< | Rscript $(PL)/counts_allelic_ratio_distribution_plot.R $(PREFIX)_counts
+#allelic ratio distrs
+$(PREFIX)_counts_ref_allele_ratios.pdf: $(PREFIX)_counts.tsv
+	cat $< | Rscript $(PL)/counts_allelic_ratio_distribution_plot.R $(PREFIX)_counts
 
 # counts
-$(PREFIX)_counts.txt: $(PREFIX)_h1.mpileup $(PREFIX)_h2.mpileup
+$(PREFIX)_counts.tsv: $(PREFIX)_h1.mpileup $(PREFIX)_h2.mpileup
 	python $(PL)/mpileup2counts.py $(PGENOME_DIR)/$(VCF_SAMPLE_ID)_hetSNVs_h1.bed $(PGENOME_DIR)/$(VCF_SAMPLE_ID)_hetSNVs_h2.bed $(PREFIX)_h1.mpileup $(PREFIX)_h2.mpileup $(Cntthresh) > $@
 
 # pileups
