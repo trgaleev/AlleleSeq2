@@ -20,12 +20,9 @@ empty <- ggplot()+geom_point(aes(1,1), colour="white")+
     axis.text.y = element_blank(),
     axis.ticks = element_blank()
   )
-
-p1 < -ggplot(d, aes(ref_allele_ratio), check.names=False)+
+p1 <- ggplot(d, aes(ref_allele_ratio), check.names=False)+
   geom_histogram(bins=41) +
   theme_bw(base_size=11) +
   labs(title=name, x="ref allele ratio")
-p1
-
 ggsave(paste(gsub("/","_", name),"_ref_allele_ratios.pdf", sep=''), p1, width=5, height=5)
 
