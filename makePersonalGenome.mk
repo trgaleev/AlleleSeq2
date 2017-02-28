@@ -36,8 +36,12 @@ ANNOTATION       := ~/refs_annotations/gencode.v19.annotation.gtf
 
 # (required) inputs ####
 FILE_PATH_BAM   := NULL
-FILE_PATH_VCF   := NULL
+FILE_PATH_VCF   := NULL  # if separate, use this for SNVs and the following for indels and svs 
 VCF_SAMPLE_ID   := NULL
+
+# specify only if using separate vcf files
+FILE_PATH_VCF_INDELS := 
+FILE_PATH_VCF_SVS    :=   
 
 
 OUTPUT_DIR := pgenome_$(VCF_SAMPLE_ID)
@@ -78,7 +82,7 @@ all: $(OUTPUT_DIR)/$(VCF_SAMPLE_ID).alleleSeqInput.snp $(OUTPUT_DIR)/$(VCF_SAMPL
 $(OUTPUT_DIR)/maternal.chain $(OUTPUT_DIR)/paternal.chain: $(FILE_PATH_VCF)  
 	@echo -e "$(USAGE)"
 	mkdir $(OUTPUT_DIR)
-	$(JAVA) -Xmx$(MAX_RAM) -jar $(VCF2DIPLOID_DIR)/vcf2diploid.jar -id $(VCF_SAMPLE_ID) -pass -chr $(REFGENOME) -vcf $(FILE_PATH_VCF) -outDir $(OUTPUT_DIR)
+	$(JAVA) -Xmx$(MAX_RAM) -jar $(VCF2DIPLOID_DIR)/vcf2diploid.jar -id $(VCF_SAMPLE_ID) -pass -chr $(REFGENOME) -vcf $(FILE_PATH_VCF_SVS) $(FILE_PATH_VCF_INDELS) $(FILE_PATH_VCF) -outDir $(OUTPUT_DIR)
 
 
 
