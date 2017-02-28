@@ -29,7 +29,7 @@ VCF_SAMPLE_ID                    := NULL
 ### mapping params ##
 
 ALIGNMENT_MODE                           := NULL # can be ASE, ASB, custom
-RM_DUPs                                  := off  # 'on' doesn't work yet
+RM_DUPLICATE_READS                       := off  # with 'on' duplicate reads will be removed using picard
 
 # needed for all: ASE, ASB, or custom:
 GenomeIdx_STAR_diploid                   := $(PGENOME_DIR)/STAR_idx_diploid
@@ -65,15 +65,25 @@ else
   PREFIX = $(tmp1:_2=)
 endif
 
+ifeq ($(RM_DUPLICATE_READS),on)
+  DEDUP_SUFFIX = rmdup.
+endif
 
-ALIGMENT_FILENAME         = $(PREFIX)_$(ALIGNMENT_MODE)-params.Aligned.sortedByCoord.out.bam
-HetSNV_UNIQALNS_FILENAME  = $(PREFIX)_$(ALIGNMENT_MODE)-params_crdsorted_uniqreads_over_hetSNVs.bam
-HetSNV_MMAPALNS_FILENAME  = $(PREFIX)_$(ALIGNMENT_MODE)-params_crdsorted_mmapreads_over_hetSNVs.bam
+
+FINAL_ALIGNMENT_FILENAME = $(PREFIX)_$(ALIGNMENT_MODE)-params.Aligned.sortedByCoord.out.$(DEDUP_SUFFIX)bam
+HetSNV_UNIQALNS_FILENAME = $(PREFIX)_$(ALIGNMENT_MODE)-params_crdsorted_uniqreads_over_hetSNVs.bam
+HetSNV_MMAPALNS_FILENAME = $(PREFIX)_$(ALIGNMENT_MODE)-params_crdsorted_mmapreads_over_hetSNVs.bam
 
 $(info READS: $(READS))
-$(info ALIGMENT_FILENAME: $(ALIGMENT_FILENAME))
+$(info FINAL_ALIGNMENT_FILENAME: $(FINAL_ALIGNMENT_FILENAME))
 $(info ALIGNMENT_MODE: $(ALIGNMENT_MODE))
 $(info PREFIX: $(PREFIX))
+$(info RM_DUPLICATE_READS: $(RM_DUPLICATE_READS))
+$(info HetSNV_UNIQALNS_FILENAME: $(HetSNV_UNIQALNS_FILENAME))
+$(info HetSNV_MMAPALNS_FILENAME: $(HetSNV_MMAPALNS_FILENAME))
+
+
+
 
 ######################
 ### PIPELINE START ###
@@ -91,8 +101,8 @@ $(PREFIX)_final_counts_ref_allele_ratios.pdf: $(PREFIX)_final_counts.tsv
 	cat $< | Rscript $(PL)/counts_allelic_ratio_distribution_plot.R $(PREFIX)_final_counts
 
 # filter out sites in potential cnv regions and in non-autosomal chr; 
-# filter/adjust sites imbalanced likely due to unaccounted multi-mapping reads 
 # and sites with seemingly misphased/miscalled nearby variants
+# filter/adjust sites imbalanced likely due to unaccounted multi-mapping reads 
 $(PREFIX)_final_counts.tsv: $(PREFIX)_raw_counts.tsv $(PREFIX)_h1_mmapreads.mpileup $(PREFIX)_h2_mmapreads.mpileup
 	cat $< | \
 	python $(PL)/filter_cnv_sites.py $(PREFIX)_discarded_HetSNVs.tsv $(PGENOME_DIR)/$(VCF_SAMPLE_ID).alleleSeqInput.cnv | \
@@ -125,19 +135,34 @@ $(PREFIX)_h2_uniqreads.mpileup: $(HetSNV_UNIQALNS_FILENAME)
 # by default --ff was also filtering-out some other - secondary? reads:  [UNMAP,SECONDARY,QCFAIL,DUP], leaving only UNMAP for now
 
 
+
+
 # non-uniq alns over hetSNVs:
-$(HetSNV_MMAPALNS_FILENAME): $(ALIGMENT_FILENAME)
+$(PREFIX)_$(ALIGNMENT_MODE)-params_crdsorted_mmapreads_over_hetSNVs.bam: $(FINAL_ALIGNMENT_FILENAME)
 	cat $(PGENOME_DIR)/$(VCF_SAMPLE_ID)_hetSNVs_h1.bed $(PGENOME_DIR)/$(VCF_SAMPLE_ID)_hetSNVs_h2.bed | \
 	$(SAMTOOLS) view -h -L - $< | grep -wv 'NH:i:1' | \
 	$(SAMTOOLS) view -b - > $@
 	$(SAMTOOLS) index $@
+	$(SAMTOOLS) flagstat $@ > $@.stat
 
 # uniq alns over hetSNVs:
-$(HetSNV_UNIQALNS_FILENAME): $(ALIGMENT_FILENAME)
+$(PREFIX)_$(ALIGNMENT_MODE)-params_crdsorted_uniqreads_over_hetSNVs.bam: $(FINAL_ALIGNMENT_FILENAME)
 	cat $(PGENOME_DIR)/$(VCF_SAMPLE_ID)_hetSNVs_h1.bed $(PGENOME_DIR)/$(VCF_SAMPLE_ID)_hetSNVs_h2.bed | \
 	$(SAMTOOLS) view -h -L - $< | grep -w '^@..\|NH:i:1' | \
 	$(SAMTOOLS) view -b - > $@
 	$(SAMTOOLS) index $@
+	$(SAMTOOLS) flagstat $@ > $@.stat
+
+
+# if removing duplicate reads
+$(PREFIX)_$(ALIGNMENT_MODE)-params.Aligned.sortedByCoord.out.rmdup.bam: $(PREFIX)_$(ALIGNMENT_MODE)-params.Aligned.sortedByCoord.out.bam
+	$(JAVA) -Xmx$(JAVA_MEM) -jar $(PICARD) MarkDuplicates \
+	INPUT=$< OUTPUT=$@ METRICS_FILE=$(@:.bam=.metrics) \
+	REMOVE_DUPLICATES=true \
+	DUPLICATE_SCORING_STRATEGY=SUM_OF_BASE_QUALITIES
+	$(SAMTOOLS) index $@
+	$(SAMTOOLS) flagstat $@ > $@.stat
+
 
 ## specific additional params will be read from $(STAR_parameters_file)
 $(PREFIX)_custom-params.Aligned.sortedByCoord.out.bam: $(READS)
