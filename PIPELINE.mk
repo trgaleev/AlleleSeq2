@@ -105,10 +105,10 @@ $(PREFIX)_final_counts_ref_allele_ratios.pdf: $(PREFIX)_final_counts.tsv
 # filter/adjust sites imbalanced likely due to unaccounted multi-mapping reads 
 $(PREFIX)_final_counts.tsv: $(PREFIX)_raw_counts.tsv $(PREFIX)_h1_mmapreads.mpileup $(PREFIX)_h2_mmapreads.mpileup
 	cat $< | \
-	python $(PL)/filter_cnv_sites.py $(PREFIX)_discarded_HetSNVs.tsv $(PGENOME_DIR)/$(VCF_SAMPLE_ID).alleleSeqInput.cnv | \
+	python $(PL)/filter_cnv_sites.py $(PREFIX)_discarded_HetSNVs.tsv $(PGENOME_DIR)/$(VCF_SAMPLE_ID)_hetSNVs_rd.tab | \
 	python $(PL)/filter_chr.py $(PREFIX)_discarded_HetSNVs.tsv | \
 	python $(PL)/filter_phase_warnings.py $(PREFIX)_discarded_HetSNVs.tsv | \
-	python $(PL)/filter_sites_w_mmaps.py $(PREFIX)_h1_mmapreads.mpileup $(PREFIX)_h2_mmapreads.mpileup $(AMB_MODE) $(PREFIX)_discarded_HetSNVs.tsv filter_mm.log > $@
+	python $(PL)/filter_sites_w_mmaps.py $(PREFIX)_h1_mmapreads.mpileup $(PREFIX)_h2_mmapreads.mpileup $(AMB_MODE) $(PREFIX)_discarded_HetSNVs.tsv filter_sites_w_mmaps.log > $@
 
 # allelic ratio distrs
 $(PREFIX)_raw_counts_ref_allele_ratios.pdf: $(PREFIX)_raw_counts.tsv
