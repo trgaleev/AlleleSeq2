@@ -52,6 +52,8 @@ FDR_CUTOFF                       := 0.05
 Cntthresh                        := 6
 AMB_MODE                         := adjust # 'adjust' or allelic ratio diff threshold for filtering
 
+
+
 ######################
 ### PIPELINE STEPS ###
 ######################
@@ -89,12 +91,16 @@ $(info HetSNV_MMAPALNS_FILENAME: $(HetSNV_MMAPALNS_FILENAME))
 ### PIPELINE START ###
 ######################
 
-all: $(PREFIX)_raw_counts_ref_allele_ratios.pdf $(PREFIX)_final_counts_ref_allele_ratios.pdf interestingHets.betabinom.tsv
+all: $(PREFIX)_raw_counts_ref_allele_ratios.pdf $(PREFIX)_final_counts_ref_allele_ratios.pdf interestingHets.binom.tsv interestingHets.betabinom.tsv
 
 # this seems to work, but the way it deals with paths, filenames, etc needs to be cleaned up
 interestingHets.betabinom.tsv: $(PREFIX)_final_counts.tsv 
 	cat $< | Rscript $(PL)/alleledb_calcOverdispersion.R $(CURDIR) $(PREFIX)_final_counts.tsv
 	cat $< | Rscript $(PL)/alleledb_alleleseqBetabinomial.R $(CURDIR) $(PREFIX)_final_counts.tsv $(FDR_CUTOFF)
+
+interestingHets.binom.tsv: $(PREFIX)_final_counts.tsv
+	python $(PL)/FalsePos.py $< $(FDR_SIMS) $(FDR_CUTOFF) > FDR.binom.txt
+	cat $< | python $(PL)/filter_by_pval.py FDR.binom.txt > $@
 
 # allelic ratio distrs
 $(PREFIX)_final_counts_ref_allele_ratios.pdf: $(PREFIX)_final_counts.tsv
@@ -108,7 +114,8 @@ $(PREFIX)_final_counts.tsv: $(PREFIX)_raw_counts.tsv $(PREFIX)_h1_mmapreads.mpil
 	python $(PL)/filter_cnv_sites.py $(PREFIX)_discarded_HetSNVs.tsv $(PGENOME_DIR)/$(VCF_SAMPLE_ID)_hetSNVs_rd.tab | \
 	python $(PL)/filter_chr.py $(PREFIX)_discarded_HetSNVs.tsv | \
 	python $(PL)/filter_phase_warnings.py $(PREFIX)_discarded_HetSNVs.tsv | \
-	python $(PL)/filter_sites_w_mmaps.py $(PREFIX)_h1_mmapreads.mpileup $(PREFIX)_h2_mmapreads.mpileup $(AMB_MODE) $(PREFIX)_discarded_HetSNVs.tsv filter_sites_w_mmaps.log > $@
+	python $(PL)/filter_sites_w_mmaps.py $(PREFIX)_h1_mmapreads.mpileup $(PREFIX)_h2_mmapreads.mpileup $(AMB_MODE) \
+	$(PREFIX)_discarded_HetSNVs.tsv filter_sites_w_mmaps.log > $@
 
 # allelic ratio distrs
 $(PREFIX)_raw_counts_ref_allele_ratios.pdf: $(PREFIX)_raw_counts.tsv
@@ -116,21 +123,26 @@ $(PREFIX)_raw_counts_ref_allele_ratios.pdf: $(PREFIX)_raw_counts.tsv
 
 # counts
 $(PREFIX)_raw_counts.tsv: $(PREFIX)_h1_uniqreads.mpileup $(PREFIX)_h2_uniqreads.mpileup
-	python $(PL)/pileup2counts.py $(PGENOME_DIR)/$(VCF_SAMPLE_ID)_hetSNVs_h1.bed $(PGENOME_DIR)/$(VCF_SAMPLE_ID)_hetSNVs_h2.bed $(PREFIX)_h1_uniqreads.mpileup $(PREFIX)_h2_uniqreads.mpileup $(Cntthresh) > $@
+	python $(PL)/pileup2counts.py $(PGENOME_DIR)/$(VCF_SAMPLE_ID)_hetSNVs_h1.bed $(PGENOME_DIR)/$(VCF_SAMPLE_ID)_hetSNVs_h2.bed \
+	$(PREFIX)_h1_uniqreads.mpileup $(PREFIX)_h2_uniqreads.mpileup $(Cntthresh) > $@
 
 
 # pileups
 $(PREFIX)_h1_mmapreads.mpileup: $(HetSNV_MMAPALNS_FILENAME)
-	$(SAMTOOLS) mpileup -BQ0 --max-depth 999999 --ff UNMAP -f $(PGENOME_DIR)/$(VCF_SAMPLE_ID)_h1.fa $< --positions $(PGENOME_DIR)/$(VCF_SAMPLE_ID)_hetSNVs_h1.bed --output $@
+	$(SAMTOOLS) mpileup -BQ0 --max-depth 999999 --ff UNMAP -f $(PGENOME_DIR)/$(VCF_SAMPLE_ID)_h1.fa $< \
+	--positions $(PGENOME_DIR)/$(VCF_SAMPLE_ID)_hetSNVs_h1.bed --output $@
 
 $(PREFIX)_h2_mmapreads.mpileup: $(HetSNV_MMAPALNS_FILENAME)
-	$(SAMTOOLS) mpileup -BQ0 --max-depth 999999 --ff UNMAP -f $(PGENOME_DIR)/$(VCF_SAMPLE_ID)_h2.fa $< --positions $(PGENOME_DIR)/$(VCF_SAMPLE_ID)_hetSNVs_h2.bed --output $@
+	$(SAMTOOLS) mpileup -BQ0 --max-depth 999999 --ff UNMAP -f $(PGENOME_DIR)/$(VCF_SAMPLE_ID)_h2.fa $< \
+	--positions $(PGENOME_DIR)/$(VCF_SAMPLE_ID)_hetSNVs_h2.bed --output $@
 
 $(PREFIX)_h1_uniqreads.mpileup: $(HetSNV_UNIQALNS_FILENAME)
-	$(SAMTOOLS) mpileup -BQ0 --max-depth 999999 --ff UNMAP -f $(PGENOME_DIR)/$(VCF_SAMPLE_ID)_h1.fa $< --positions $(PGENOME_DIR)/$(VCF_SAMPLE_ID)_hetSNVs_h1.bed --output $@
+	$(SAMTOOLS) mpileup -BQ0 --max-depth 999999 --ff UNMAP -f $(PGENOME_DIR)/$(VCF_SAMPLE_ID)_h1.fa $< \
+	--positions $(PGENOME_DIR)/$(VCF_SAMPLE_ID)_hetSNVs_h1.bed --output $@
 
 $(PREFIX)_h2_uniqreads.mpileup: $(HetSNV_UNIQALNS_FILENAME)
-	$(SAMTOOLS) mpileup -BQ0 --max-depth 999999 --ff UNMAP -f $(PGENOME_DIR)/$(VCF_SAMPLE_ID)_h2.fa $< --positions $(PGENOME_DIR)/$(VCF_SAMPLE_ID)_hetSNVs_h2.bed --output $@
+	$(SAMTOOLS) mpileup -BQ0 --max-depth 999999 --ff UNMAP -f $(PGENOME_DIR)/$(VCF_SAMPLE_ID)_h2.fa $< \
+	--positions $(PGENOME_DIR)/$(VCF_SAMPLE_ID)_hetSNVs_h2.bed --output $@
 
 # by default --ff was also filtering-out some other - secondary? reads:  [UNMAP,SECONDARY,QCFAIL,DUP], leaving only UNMAP for now
 

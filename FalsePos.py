@@ -30,7 +30,8 @@ Note that FDR is NOT monotonically decreasing as we do this. Its true that both 
 Also note that we do multiple simulations and use the mean of the Nsim values, in order to smooth out the results.
 
 '''
-import sys, getInterestingHetsAnnotations, bisect, binom, random, numpy, pdb
+## import sys, getInterestingHetsAnnotations, bisect, binom, random, numpy, pdb
+import sys, bisect, binom, random, numpy, pdb
 
 class binomMemo(object):
     def __init__(self, n):
@@ -65,25 +66,49 @@ if __name__=='__main__':
     print "#"," ".join(sys.argv)
     print "pval\tP\tFP\tFDR"
     bm=binomMemo(60)
-    h=getInterestingHetsAnnotations.Handler(ifile, hasHeader=True)
-    n=h.getCount()
-    g=h.getAllAnnotationsGenerator();
 
-    act_pvals=numpy.zeros(n) # pval as reported in counts file
-    cnt_sums=numpy.zeros(n, dtype=numpy.int)  # sum of major and minor alleles
+## let's try to make it simpler, without the additional module
+##    h=getInterestingHetsAnnotations.Handler(ifile, hasHeader=True)
+##    n=h.getCount()
+##    g=h.getAllAnnotationsGenerator();
+##    act_pvals=numpy.zeros(n) # pval as reported in counts file
+##    cnt_sums=numpy.zeros(n, dtype=numpy.int)  # sum of major and minor alleles
+##
+##    # for each hetSNP, get the count of major and minor allele from the input file
+##    for i, t in enumerate(g):
+##        c,pos,rec = t
+##        d=h.toDict(rec)
+##        act_pvals[i]=float(d['SymPval'])
+##        counts=[d['cA'],d['cC'],d['cG'],d['cT']]
+##        counts=[int(e) for e in counts]
+##        counts=sorted(counts, reverse=True)[0:2]
+##        cnt_sums[i]=sum(counts)
 
-    # for each hetSNP, get the count of major and minor allele from the input file
-    for i, t in enumerate(g):
-        c,pos,rec = t
-        d=h.toDict(rec)
-        act_pvals[i]=float(d['SymPval'])
-        counts=[d['cA'],d['cC'],d['cG'],d['cT']]
-        counts=[int(e) for e in counts]
-        counts=sorted(counts, reverse=True)[0:2]
-        cnt_sums[i]=sum(counts)
+    cnt_sums_list  = []
+    act_pvals_list = []
+    with open(ifile, 'r') as inf:
+	inf.readline()
+	for line in inf:
+            (chr,ref_coord,h1_coord,h2_coord,ref_allele,h1_allele,h2_allele,cA,cC,cG,cT,cN,
+              ref_allele_ratio,sum_ref_n_alt_cnts,p_binom,cnv,mmap_log) = line.split('\t')
+            act_pvals_list.append(float(p_binom))
+            counts = [int(e) for e in [cA, cC, cG, cT]]
+            counts = sorted(counts, reverse=True)[:2]
+            cnt_sums_list.append(sum(counts))
+    act_pvals = numpy.array(act_pvals_list)
+    cnt_sums  = numpy.array(cnt_sums_list)
+    n = len(cnt_sums)
+
+##
+      
+	
+            	
     
     act_pvals.sort()
+    
+
     sim_pvals=numpy.array([ sorted([simpval(cnt_sums[j],bm) for j in xrange(n)]) for i in xrange(sims)])
+   
     #sim_pvals_means=numpy.mean(sim_pvals, 0)
 
     pvs=[e*0.001 for e in range(10)]+[e*0.01 for e in range(1,10)]+[e*0.1 for e in range(1,10)]
