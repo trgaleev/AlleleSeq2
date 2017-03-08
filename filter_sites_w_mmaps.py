@@ -1,5 +1,6 @@
 import sys
 import read_pileup
+import binom
 
 def outwrite(l, log_mm='.'):
     sys.stdout.write('\t'.join([l.strip(), log_mm])+'\n')
@@ -83,6 +84,10 @@ for line in sys.stdin:
             adj = min((um_basecnts[weaker] + mm_basecnts[weaker]), max(um_basecnts[h1_allele], um_basecnts[h2_allele])) 
             diff = adj - um_basecnts[weaker] 
             um_basecnts[weaker] = adj
+            
+            new_tot = int(um_basecnts[h1_allele] + um_basecnts[h2_allele])
+            new_ratio = float(um_basecnts[ref_allele])/float(new_tot)
+            new_p_binom = binom.binomtest(um_basecnts[ref_allele], new_tot, 0.5)
 
             sys.stdout.write('\t'.join([
                 chr, ref_coord, h1_coord, h2_coord, ref_allele, h1_allele, h2_allele,
@@ -91,7 +96,7 @@ for line in sys.stdin:
                 str(int(um_basecnts['G'])),
                 str(int(um_basecnts['T'])),
                 str(int(um_basecnts['N'])),
-                ref_allele_ratio, sum_ref_n_alt_cnts, p_binom, 
+                str(new_ratio), str(new_tot), str(new_p_binom), 
                 cnv[:-1], weaker+':+'+str(int(diff))
                 ])+'\n')
 
