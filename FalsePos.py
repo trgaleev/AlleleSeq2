@@ -103,12 +103,22 @@ if __name__=='__main__':
             mean_Nsims=numpy.mean([bisect.bisect(sim_pvals[i], pv) for i in xrange(sims)])
             FDR=mean_Nsims/(Nact+1)
             if verbose: print "test %d %f %f %f" % (Nact,mean_Nsims,FDR, pv)
-            if not bestFDR and FDR < target:
+#tg20161115: this seems to fail (in extreme cases) if the first bestFDR < target is 0
+#            if not bestFDR and FDR < target:
+            if bestFDR==None and FDR < target:
                 print "target %f" % target
                 print "before %f %f" % (last_FDR, last_pv)
                 print "after  %f %f" % (FDR, pv)
                 bestFDR = FDR; bestPV = pv
+#tg20161115: stop tests if bestFDR found, bestFDR and bestPV don't change anyway:
+		if not verbose: break
 
             last_FDR=FDR; last_pv=pv
 
-        print "Target %f FDR %f pv %f" % (target,bestFDR, bestPV)
+#tg20161115: to avoid crashing when bestFDR and bestPV are None. 
+	#print "Target %f FDR %f pv %f" % (target,bestFDR, bestPV)
+	if bestFDR!=None and bestPV!=None: print "Target %f FDR %f pv %f" % (target,bestFDR, bestPV)
+	else: 
+		print "# couldn't calculate pvalue threshold: no snvs in input or none with small enough p-value (?)\n# will set p value threshold to 0: \nTarget "+str(target)+" FDR NA pv 0" 
+		print >> sys.stderr, "WARNING "+sys.argv[0]+": couldn't calculate pvalue threshold: no snvs in input or none with small enough p-value (?). will set p value threshold to 0 - no snvs will be reported after filtering" 
+
