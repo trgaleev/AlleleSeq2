@@ -14,6 +14,7 @@ PL                            := ~/bin/AlleleSeq2/
 # matters if used STAR genomeGenerate only
 STAR                          := ~/bin/STAR/bin/Linux_x86_64/STAR
 N_THREADS                     := 1        
+STAR_limitGenomeGenerateRAM   := 31000000000 # (bytes, default in STAR)
 
 # aligner:
 #  'bowtie1' or 'STAR'; 
@@ -26,7 +27,7 @@ ALIGNER                       := STAR
 #REFGENOME        := ~/refs_annotations/Homo_sapiens_assembly38.fasta
 #ANNOTATION       := ~/refs_annotations/gencode.v24.annotation.gtf
 # hg19
-REFGENOME        := ~/refs_annotations/human_g1k_v37_decoy.fasta
+REFGENOME        := ~/refs_annotations/hg19_ucsc.fasta
 ANNOTATION       := ~/refs_annotations/gencode.v19.annotation.gtf
 
 
@@ -72,7 +73,7 @@ all: $(OUTPUT_DIR)/$(VCF_SAMPLE_ID)_hetSNVs_h1.bed $(OUTPUT_DIR)/$(VCF_SAMPLE_ID
 
 $(OUTPUT_DIR)/maternal.chain $(OUTPUT_DIR)/paternal.chain: $(FILE_PATH_VCF)
 	@echo -e "$(USAGE)"
-	mkdir $(OUTPUT_DIR)
+	mkdir -p $(OUTPUT_DIR)
 	$(JAVA) -Xmx$(MAX_RAM) -jar $(VCF2DIPLOID_DIR)/vcf2diploid.jar \
 	-id $(VCF_SAMPLE_ID) \
 	-pass \
@@ -83,10 +84,11 @@ $(OUTPUT_DIR)/maternal.chain $(OUTPUT_DIR)/paternal.chain: $(FILE_PATH_VCF)
 
 
 # prepare .bed files w all hetSNVs in both coord systems
+# if chr name convention is different in .vcf and $(REFGENOME) use the one from $(REFGENOME) 
 # also make it more general: substitute 'paternal' with 'h1' and 'maternal' with 'h2' to match GT, h1|h2, in the vcf
 
 $(OUTPUT_DIR)/$(VCF_SAMPLE_ID)_hetSNVs_ref.bed: $(FILE_PATH_VCF) $(OUTPUT_DIR)/maternal.chain $(OUTPUT_DIR)/paternal.chain
-	cat $(FILE_PATH_VCF) | python $(PL)/get_hetSNV_bed.py $(VCF_SAMPLE_ID) > $@
+	cat $(FILE_PATH_VCF) | python $(PL)/get_hetSNV_bed.py $(VCF_SAMPLE_ID) $(REFGENOME) > $@
 
 $(OUTPUT_DIR)/$(VCF_SAMPLE_ID)_hetSNVs_h2.bed: $(OUTPUT_DIR)/$(VCF_SAMPLE_ID)_hetSNVs_ref.bed $(OUTPUT_DIR)/maternal.chain
 	sed 's/maternal/h2/g' $(OUTPUT_DIR)/maternal.chain | $(LIFTOVER) $< stdin $@ $(subst .bed,,$@).not_lifted.bed
@@ -97,83 +99,42 @@ $(OUTPUT_DIR)/$(VCF_SAMPLE_ID)_hetSNVs_h1.bed: $(OUTPUT_DIR)/$(VCF_SAMPLE_ID)_he
 
 # will use chrs 1-22 as well as X,Y, MT from both haplotypes as single diploid genome, even though it doesn't make much sense to use all of the latter. 
 # such as paternal MT, maternal Y:
-# first, in case of local phasing it is not clear which haplotype is really paternal or maternal
-# also, can't interpret het variants seen in vcf-files for Y and MT chrs
+# still, first, in case of local phasing it is not clear which haplotype is really paternal or maternal
+# also, can't interpret het variants ofthen seen in vcf-files for Y and MT chrs
 # one may want to include these for mapping though
 # thus, later the hetsnvs on these chrs should be excluded from read/allele count analyses
 
 
-# #todo: make it more generic to work with chr1 etc, M/MT etc
+#$(OUTPUT_DIR)/$(VCF_SAMPLE_ID)_h2.fa: $(OUTPUT_DIR)/maternal.chain $(OUTPUT_DIR)/$(VCF_SAMPLE_ID)_hetSNVs_ref.bed
+#	cat $(shell awk  '{print $$1"_maternal.fa"}' $(OUTPUT_DIR)/$(VCF_SAMPLE_ID)_hetSNVs_ref.bed | uniq) | \
+#	sed 's/maternal/h2/g' > $@
 
-$(OUTPUT_DIR)/$(VCF_SAMPLE_ID)_h2.fa: $(OUTPUT_DIR)/maternal.chain
-	cat \
-		$(OUTPUT_DIR)/1_$(VCF_SAMPLE_ID)_maternal.fa \
-		$(OUTPUT_DIR)/2_$(VCF_SAMPLE_ID)_maternal.fa \
-		$(OUTPUT_DIR)/3_$(VCF_SAMPLE_ID)_maternal.fa \
-		$(OUTPUT_DIR)/4_$(VCF_SAMPLE_ID)_maternal.fa \
-		$(OUTPUT_DIR)/5_$(VCF_SAMPLE_ID)_maternal.fa \
-		$(OUTPUT_DIR)/6_$(VCF_SAMPLE_ID)_maternal.fa \
-		$(OUTPUT_DIR)/7_$(VCF_SAMPLE_ID)_maternal.fa \
-		$(OUTPUT_DIR)/8_$(VCF_SAMPLE_ID)_maternal.fa \
-		$(OUTPUT_DIR)/9_$(VCF_SAMPLE_ID)_maternal.fa \
-		$(OUTPUT_DIR)/10_$(VCF_SAMPLE_ID)_maternal.fa \
-		$(OUTPUT_DIR)/11_$(VCF_SAMPLE_ID)_maternal.fa \
-		$(OUTPUT_DIR)/12_$(VCF_SAMPLE_ID)_maternal.fa \
-		$(OUTPUT_DIR)/13_$(VCF_SAMPLE_ID)_maternal.fa \
-		$(OUTPUT_DIR)/14_$(VCF_SAMPLE_ID)_maternal.fa \
-		$(OUTPUT_DIR)/15_$(VCF_SAMPLE_ID)_maternal.fa \
-		$(OUTPUT_DIR)/16_$(VCF_SAMPLE_ID)_maternal.fa \
-		$(OUTPUT_DIR)/17_$(VCF_SAMPLE_ID)_maternal.fa \
-		$(OUTPUT_DIR)/18_$(VCF_SAMPLE_ID)_maternal.fa \
-		$(OUTPUT_DIR)/19_$(VCF_SAMPLE_ID)_maternal.fa \
-		$(OUTPUT_DIR)/20_$(VCF_SAMPLE_ID)_maternal.fa \
-		$(OUTPUT_DIR)/21_$(VCF_SAMPLE_ID)_maternal.fa \
-		$(OUTPUT_DIR)/22_$(VCF_SAMPLE_ID)_maternal.fa \
-		$(OUTPUT_DIR)/X_$(VCF_SAMPLE_ID)_maternal.fa \
-		$(OUTPUT_DIR)/Y_$(VCF_SAMPLE_ID)_maternal.fa \
-		$(OUTPUT_DIR)/MT_$(VCF_SAMPLE_ID)_maternal.fa | \
-		sed 's/maternal/h2/g' > $@
- 
-$(OUTPUT_DIR)/$(VCF_SAMPLE_ID)_h1.fa: $(OUTPUT_DIR)/paternal.chain
-	cat \
-		$(OUTPUT_DIR)/1_$(VCF_SAMPLE_ID)_paternal.fa \
-		$(OUTPUT_DIR)/2_$(VCF_SAMPLE_ID)_paternal.fa \
-		$(OUTPUT_DIR)/3_$(VCF_SAMPLE_ID)_paternal.fa \
-		$(OUTPUT_DIR)/4_$(VCF_SAMPLE_ID)_paternal.fa \
-		$(OUTPUT_DIR)/5_$(VCF_SAMPLE_ID)_paternal.fa \
-		$(OUTPUT_DIR)/6_$(VCF_SAMPLE_ID)_paternal.fa \
-		$(OUTPUT_DIR)/7_$(VCF_SAMPLE_ID)_paternal.fa \
-		$(OUTPUT_DIR)/8_$(VCF_SAMPLE_ID)_paternal.fa \
-		$(OUTPUT_DIR)/9_$(VCF_SAMPLE_ID)_paternal.fa \
-		$(OUTPUT_DIR)/10_$(VCF_SAMPLE_ID)_paternal.fa \
-		$(OUTPUT_DIR)/11_$(VCF_SAMPLE_ID)_paternal.fa \
-		$(OUTPUT_DIR)/12_$(VCF_SAMPLE_ID)_paternal.fa \
-		$(OUTPUT_DIR)/13_$(VCF_SAMPLE_ID)_paternal.fa \
-		$(OUTPUT_DIR)/14_$(VCF_SAMPLE_ID)_paternal.fa \
-		$(OUTPUT_DIR)/15_$(VCF_SAMPLE_ID)_paternal.fa \
-		$(OUTPUT_DIR)/16_$(VCF_SAMPLE_ID)_paternal.fa \
-		$(OUTPUT_DIR)/17_$(VCF_SAMPLE_ID)_paternal.fa \
-		$(OUTPUT_DIR)/18_$(VCF_SAMPLE_ID)_paternal.fa \
-		$(OUTPUT_DIR)/19_$(VCF_SAMPLE_ID)_paternal.fa \
-		$(OUTPUT_DIR)/20_$(VCF_SAMPLE_ID)_paternal.fa \
-		$(OUTPUT_DIR)/21_$(VCF_SAMPLE_ID)_paternal.fa \
-		$(OUTPUT_DIR)/22_$(VCF_SAMPLE_ID)_paternal.fa \
-		$(OUTPUT_DIR)/X_$(VCF_SAMPLE_ID)_paternal.fa \
-		$(OUTPUT_DIR)/Y_$(VCF_SAMPLE_ID)_paternal.fa \
-		$(OUTPUT_DIR)/MT_$(VCF_SAMPLE_ID)_paternal.fa | \
-		sed 's/paternal/h1/g' > $@
+#$(OUTPUT_DIR)/$(VCF_SAMPLE_ID)_h1.fa: $(OUTPUT_DIR)/paternal.chain $(OUTPUT_DIR)/$(VCF_SAMPLE_ID)_hetSNVs_ref.bed
+#	cat $(shell awk  '{print $$1"_paternal.fa"}' $(OUTPUT_DIR)/$(VCF_SAMPLE_ID)_hetSNVs_ref.bed | uniq) | \
+#	sed 's/paternal/h1/g' > $@
 	
 
+$(OUTPUT_DIR)/$(VCF_SAMPLE_ID)_h2.fa: $(OUTPUT_DIR)/maternal.chain $(OUTPUT_DIR)/$(VCF_SAMPLE_ID)_hetSNVs_ref.bed
+	cat $(shell ls $(OUTPUT_DIR)/*[0-9]_$(VCF_SAMPLE_ID)_maternal.fa | sort -V)  \
+	    $(shell ls $(OUTPUT_DIR)/*[X,Y]_$(VCF_SAMPLE_ID)_maternal.fa)  \
+	    $(shell ls $(OUTPUT_DIR)/*[M,MT]_$(VCF_SAMPLE_ID)_maternal.fa) | \
+	sed 's/maternal/h2/g' > $@
+
+$(OUTPUT_DIR)/$(VCF_SAMPLE_ID)_h1.fa: $(OUTPUT_DIR)/paternal.chain $(OUTPUT_DIR)/$(VCF_SAMPLE_ID)_hetSNVs_ref.bed
+	cat $(shell ls $(OUTPUT_DIR)/*[0-9]_$(VCF_SAMPLE_ID)_paternal.fa | sort -V)  \
+	    $(shell ls $(OUTPUT_DIR)/*[X,Y]_$(VCF_SAMPLE_ID)_paternal.fa)  \
+	    $(shell ls $(OUTPUT_DIR)/*[M,MT]_$(VCF_SAMPLE_ID)_paternal.fa) | \
+	sed 's/paternal/h1/g' > $@
 
 # if star
 # will generate lifted annotation files, but will not use them when generating STAR genome indices, since
-# star v 2.4.1a can do this on the fly, thus --sjdbGTFfile and --sjdbOverhang should be specified when mapping the reads
+# star v 2.4.1a can do this on the fly; thus --sjdbGTFfile and --sjdbOverhang should be specified when mapping the reads
 
 $(OUTPUT_DIR)/maternal.$(notdir $(ANNOTATION)): $(OUTPUT_DIR)/maternal.chain 
-	sed 's/^chr//g' $(ANNOTATION) | $(LIFTOVER) -gff stdin $< $@ $(OUTPUT_DIR)/maternal.notLifted
+	cat $(ANNOTATION) | $(LIFTOVER) -gff stdin $< $@ $(OUTPUT_DIR)/maternal.notLifted
 
 $(OUTPUT_DIR)/paternal.$(notdir $(ANNOTATION)): $(OUTPUT_DIR)/paternal.chain 
-	sed 's/^chr//g' $(ANNOTATION) | $(LIFTOVER) -gff stdin $< $@ $(OUTPUT_DIR)/paternal.notLifted
+	cat $(ANNOTATION) | $(LIFTOVER) -gff stdin $< $@ $(OUTPUT_DIR)/paternal.notLifted
 
 $(OUTPUT_DIR)/$(VCF_SAMPLE_ID)_diploid.$(notdir $(ANNOTATION)): $(OUTPUT_DIR)/maternal.$(notdir $(ANNOTATION)) $(OUTPUT_DIR)/paternal.$(notdir $(ANNOTATION))
 	cat $(OUTPUT_DIR)/maternal.$(notdir $(ANNOTATION)) $(OUTPUT_DIR)/paternal.$(notdir $(ANNOTATION)) | sed 's/maternal/h2/g' | sed 's/paternal/h1/g'  > $@
@@ -182,9 +143,10 @@ $(OUTPUT_DIR)/$(VCF_SAMPLE_ID)_diploid.$(notdir $(ANNOTATION)): $(OUTPUT_DIR)/ma
 # star idx
 
 $(OUTPUT_DIR)/STAR_idx_diploid_Log.out: $(OUTPUT_DIR)/$(VCF_SAMPLE_ID)_diploid.$(notdir $(ANNOTATION)) $(OUTPUT_DIR)/$(VCF_SAMPLE_ID)_h2.fa $(OUTPUT_DIR)/$(VCF_SAMPLE_ID)_h1.fa
-	mkdir $(OUTPUT_DIR)/STAR_idx_diploid
+	mkdir -p $(OUTPUT_DIR)/STAR_idx_diploid
 	$(STAR) \
 		--runThreadN $(N_THREADS) \
+		--limitGenomeGenerateRAM $(STAR_limitGenomeGenerateRAM) \
 		--runMode genomeGenerate \
 		--genomeDir $(OUTPUT_DIR)/STAR_idx_diploid \
 		--genomeFastaFiles $(OUTPUT_DIR)/$(VCF_SAMPLE_ID)_h2.fa $(OUTPUT_DIR)/$(VCF_SAMPLE_ID)_h1.fa \
@@ -216,17 +178,18 @@ $(OUTPUT_DIR)/STAR_idx_diploid_Log.out: $(OUTPUT_DIR)/$(VCF_SAMPLE_ID)_diploid.$
 
 
 # this seems to reproduce previous approach, but ~3 times faster
-# requires chr in the streamed bed to be in the same order as in the *bam file
+# requires chr in the .bed to be in the same order as in the .bam file
 # #todo: assess if should be using (by prefiltering with samtools) only non-duplicated reads
 # in the wgs bam file
 # also test samtools bedcov
 
-$(OUTPUT_DIR)/$(VCF_SAMPLE_ID)_hetSNVs_rd.tab: $(OUTPUT_DIR)/$(VCF_SAMPLE_ID)_hetSNVs_ref.bed 
+$(OUTPUT_DIR)/$(VCF_SAMPLE_ID)_hetSNVs_rd.tab: $(OUTPUT_DIR)/$(VCF_SAMPLE_ID)_hetSNVs_ref.bed
 	$(SAMTOOLS) view -H $(FILE_PATH_BAM) | grep -P "@SQ\tSN:" | \
 	sed 's/@SQ\tSN://' | sed 's/\tLN:/\t/' > $(OUTPUT_DIR)/genome.txt 
 	awk '{print $$1"\t"($$3-1000)"\t"($$3+1000)"\t"$$4}' $< | grep -v "-" | \
-	$(BEDTOOLS_coverageBed) -a stdin -b $(FILE_PATH_BAM) -g $(OUTPUT_DIR)/genome.txt \
-	-sorted -counts | python $(PL)/calculate_rd.py > $@
+	python $(PL)/feed_sorted_check_names.py $(OUTPUT_DIR)/genome.txt | \
+	$(BEDTOOLS_coverageBed) -a stdin -b $(FILE_PATH_BAM) \
+		-g $(OUTPUT_DIR)/genome.txt -sorted -counts | python $(PL)/calculate_rd.py > $@
 	
 
 $(OUTPUT_DIR)/bowtie_build_diploid.log: $(OUTPUT_DIR)/$(VCF_SAMPLE_ID)_h2.fa $(OUTPUT_DIR)/$(VCF_SAMPLE_ID)_h1.fa 
