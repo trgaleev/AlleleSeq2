@@ -28,6 +28,15 @@ ALIGNER                       := STAR
 #ANNOTATION       := ~/refs_annotations/gencode.v24.annotation.gtf
 # hg19
 REFGENOME        := ~/refs_annotations/hg19_ucsc.fasta
+ALLOSOMES_M        := X,Y     
+ALLOSOMES_P        := X,Y    
+# if globally phased and the vcf follows GT=pat|mat convention, can be specified accordingly for male/female
+# otherwise will use all combinations to make sure all possible seqs
+# are there when mapping; hets from non-autosomal should then be removed in AS analyses
+
+# ADDNL_SEQNS    :=
+ADDNL_SEQNS      := hg19_ucsc_non_chr_scaffolds_only.fasta
+
 ANNOTATION       := ~/refs_annotations/gencode.v19.annotation.gtf
 
 
@@ -97,13 +106,6 @@ $(OUTPUT_DIR)/$(VCF_SAMPLE_ID)_hetSNVs_h1.bed: $(OUTPUT_DIR)/$(VCF_SAMPLE_ID)_he
 	sed 's/paternal/h1/g' $(OUTPUT_DIR)/paternal.chain | $(LIFTOVER) $< stdin $@ $(subst .bed,,$@).not_lifted.bed
 
 
-# will use chrs 1-22 as well as X,Y, MT from both haplotypes as single diploid genome, even though it doesn't make much sense to use all of the latter. 
-# such as paternal MT, maternal Y:
-# still, first, in case of local phasing it is not clear which haplotype is really paternal or maternal
-# also, can't interpret het variants ofthen seen in vcf-files for Y and MT chrs
-# one may want to include these for mapping though
-# thus, later the hetsnvs on these chrs should be excluded from read/allele count analyses
-
 
 #$(OUTPUT_DIR)/$(VCF_SAMPLE_ID)_h2.fa: $(OUTPUT_DIR)/maternal.chain $(OUTPUT_DIR)/$(VCF_SAMPLE_ID)_hetSNVs_ref.bed
 #	cat $(shell awk  '{print $$1"_maternal.fa"}' $(OUTPUT_DIR)/$(VCF_SAMPLE_ID)_hetSNVs_ref.bed | uniq) | \
@@ -116,14 +118,13 @@ $(OUTPUT_DIR)/$(VCF_SAMPLE_ID)_hetSNVs_h1.bed: $(OUTPUT_DIR)/$(VCF_SAMPLE_ID)_he
 
 $(OUTPUT_DIR)/$(VCF_SAMPLE_ID)_h2.fa: $(OUTPUT_DIR)/maternal.chain $(OUTPUT_DIR)/$(VCF_SAMPLE_ID)_hetSNVs_ref.bed
 	cat $(shell ls $(OUTPUT_DIR)/*[0-9]_$(VCF_SAMPLE_ID)_maternal.fa | sort -V)  \
-	    $(shell ls $(OUTPUT_DIR)/*[X,Y]_$(VCF_SAMPLE_ID)_maternal.fa)  \
+	    $(shell ls $(OUTPUT_DIR)/*[$(ALLOSOMES_M)]_$(VCF_SAMPLE_ID)_maternal.fa)  \
 	    $(shell ls $(OUTPUT_DIR)/*[M,MT]_$(VCF_SAMPLE_ID)_maternal.fa) | \
 	sed 's/maternal/h2/g' > $@
 
 $(OUTPUT_DIR)/$(VCF_SAMPLE_ID)_h1.fa: $(OUTPUT_DIR)/paternal.chain $(OUTPUT_DIR)/$(VCF_SAMPLE_ID)_hetSNVs_ref.bed
 	cat $(shell ls $(OUTPUT_DIR)/*[0-9]_$(VCF_SAMPLE_ID)_paternal.fa | sort -V)  \
-	    $(shell ls $(OUTPUT_DIR)/*[X,Y]_$(VCF_SAMPLE_ID)_paternal.fa)  \
-	    $(shell ls $(OUTPUT_DIR)/*[M,MT]_$(VCF_SAMPLE_ID)_paternal.fa) | \
+	    $(shell ls $(OUTPUT_DIR)/*[$(ALLOSOMES_P)]_$(VCF_SAMPLE_ID)_paternal.fa)  \
 	sed 's/paternal/h1/g' > $@
 
 # if star
@@ -149,7 +150,7 @@ $(OUTPUT_DIR)/STAR_idx_diploid_Log.out: $(OUTPUT_DIR)/$(VCF_SAMPLE_ID)_diploid.$
 		--limitGenomeGenerateRAM $(STAR_limitGenomeGenerateRAM) \
 		--runMode genomeGenerate \
 		--genomeDir $(OUTPUT_DIR)/STAR_idx_diploid \
-		--genomeFastaFiles $(OUTPUT_DIR)/$(VCF_SAMPLE_ID)_h2.fa $(OUTPUT_DIR)/$(VCF_SAMPLE_ID)_h1.fa \
+		--genomeFastaFiles $(OUTPUT_DIR)/$(VCF_SAMPLE_ID)_h1.fa $(OUTPUT_DIR)/$(VCF_SAMPLE_ID)_h2.fa $(ADDNL_SEQNS) \
 		--outFileNamePrefix $(OUTPUT_DIR)/STAR_idx_diploid_
 
 
