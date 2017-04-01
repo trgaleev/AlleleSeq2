@@ -124,7 +124,7 @@ $(OUTPUT_DIR)/$(VCF_SAMPLE_ID)_h2.fa: $(OUTPUT_DIR)/maternal.chain $(OUTPUT_DIR)
 
 $(OUTPUT_DIR)/$(VCF_SAMPLE_ID)_h1.fa: $(OUTPUT_DIR)/paternal.chain $(OUTPUT_DIR)/$(VCF_SAMPLE_ID)_hetSNVs_ref.bed
 	cat $(shell ls $(OUTPUT_DIR)/*[0-9]_$(VCF_SAMPLE_ID)_paternal.fa | sort -V)  \
-	    $(shell ls $(OUTPUT_DIR)/*[$(ALLOSOMES_P)]_$(VCF_SAMPLE_ID)_paternal.fa)  \
+	    $(shell ls $(OUTPUT_DIR)/*[$(ALLOSOMES_P)]_$(VCF_SAMPLE_ID)_paternal.fa) | \
 	sed 's/paternal/h1/g' > $@
 
 # if star
