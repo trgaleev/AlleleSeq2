@@ -4,6 +4,7 @@ USAGE := "make makePersonalGenome VCF_SAMPLE_ID=sample_name FILE_PATH_VCF=path_t
 VCF2DIPLOID_DIR               := ~/bin/vcf2diploid_v0.2.6a/
 JAVA                          := /usr/bin/java
 BOWTIE_build                  := ~/bin/bowtie-1.1.1/bowtie-build
+BOWTIE2_build                 := ~/bin/bowtie2-2.3.1/bowtie2-build
 LIFTOVER                      := ~/bin/liftOver
 #BEDTOOLS_intersectBed         := ~/bin/bedtools2/bin/intersectBed
 BEDTOOLS_coverageBed          := ~/bin/bedtools2/bin/coverageBed
@@ -34,8 +35,8 @@ ALLOSOMES_P        := X,Y
 # otherwise will use all combinations to make sure all possible seqs
 # are there when mapping; hets from non-autosomal should then be removed in AS analyses
 
-# ADDNL_SEQNS    :=
-ADDNL_SEQNS      := hg19_ucsc_non_chr_scaffolds_only.fasta
+#ADDNL_SEQNS    :=
+ADDNL_SEQNS      := ~/refs_annotations/hg19_ucsc_non_chr_scaffolds_only.fasta
 
 ANNOTATION       := ~/refs_annotations/gencode.v19.annotation.gtf
 
@@ -53,12 +54,20 @@ FILE_PATH_VCF_SVS    :=
 OUTPUT_DIR := pgenome_$(VCF_SAMPLE_ID)
 
 
-#### bowtie vs STAR
-
+#### aligner idx
+empty_string  :=
 ifeq ($(ALIGNER),bowtie1)
   PGENOME_IDX_TARGET = $(OUTPUT_DIR)/bowtie_build_diploid.log
 else ifeq ($(ALIGNER),STAR)
   PGENOME_IDX_TARGET = $(OUTPUT_DIR)/STAR_idx_diploid_Log.out
+else ifeq ($(ALIGNER)$(ADDNL_SEQNS),bowtie2$(empty_string))
+  PGENOME_IDX_TARGET = $(OUTPUT_DIR)/bowtie2_build_diploid.log
+  BOWTIE2_SEQ_IN = $(OUTPUT_DIR)/$(VCF_SAMPLE_ID)_h1.fa,$(OUTPUT_DIR)/$(VCF_SAMPLE_ID)_h2.fa 
+  $(info BOWTIE2_SEQ_IN: $(BOWTIE2_SEQ_IN))
+else ifeq ($(ALIGNER),bowtie2)
+  PGENOME_IDX_TARGET = $(OUTPUT_DIR)/bowtie2_build_diploid.log
+  BOWTIE2_SEQ_IN = $(OUTPUT_DIR)/$(VCF_SAMPLE_ID)_h1.fa,$(OUTPUT_DIR)/$(VCF_SAMPLE_ID)_h2.fa,$(ADDNL_SEQNS)
+  $(info BOWTIE2_SEQ_IN: $(BOWTIE2_SEQ_IN))
 endif
 
 
@@ -193,8 +202,11 @@ $(OUTPUT_DIR)/$(VCF_SAMPLE_ID)_hetSNVs_rd.tab: $(OUTPUT_DIR)/$(VCF_SAMPLE_ID)_he
 		-g $(OUTPUT_DIR)/genome.txt -sorted -counts | python $(PL)/calculate_rd.py > $@
 	
 
-$(OUTPUT_DIR)/bowtie_build_diploid.log: $(OUTPUT_DIR)/$(VCF_SAMPLE_ID)_h2.fa $(OUTPUT_DIR)/$(VCF_SAMPLE_ID)_h1.fa 
-	$(BOWTIE_build) --offrate 2 \
-		$(OUTPUT_DIR)/$(VCF_SAMPLE_ID)_h2.fa,$(OUTPUT_DIR)/$(VCF_SAMPLE_ID)_h1.fa $(OUTPUT_DIR)/$(VCF_SAMPLE_ID)_diploid > $@
+#$(OUTPUT_DIR)/bowtie_build_diploid.log: $(OUTPUT_DIR)/$(VCF_SAMPLE_ID)_h2.fa $(OUTPUT_DIR)/$(VCF_SAMPLE_ID)_h1.fa 
+#	$(BOWTIE_build) --offrate 2 \
+#		$(OUTPUT_DIR)/$(VCF_SAMPLE_ID)_h2.fa,$(OUTPUT_DIR)/$(VCF_SAMPLE_ID)_h1.fa $(OUTPUT_DIR)/$(VCF_SAMPLE_ID)_diploid > $@
 
 
+
+$(OUTPUT_DIR)/bowtie2_build_diploid.log: $(OUTPUT_DIR)/$(VCF_SAMPLE_ID)_h1.fa $(OUTPUT_DIR)/$(VCF_SAMPLE_ID)_h2.fa 
+	$(BOWTIE2_build) --threads $(N_THREADS) $(BOWTIE2_SEQ_IN) $(OUTPUT_DIR)/$(VCF_SAMPLE_ID)_diploid > $@
