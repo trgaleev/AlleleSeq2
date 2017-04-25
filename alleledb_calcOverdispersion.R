@@ -3,7 +3,8 @@
 
 
 
-library(VGAM)
+#library(VGAM)
+library(VGAM, lib.loc="~/R_libs/")
 ## weighted beta/binomial distribution
 # d.combined collects all results and correspond it to an allelic ratio:
 # col1=ref_allele_ratio (based on binomial n=6, ar=0,1/6,2/6...)

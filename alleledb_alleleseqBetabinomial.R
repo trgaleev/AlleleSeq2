@@ -17,7 +17,8 @@ if (length(args)>2){
 
 
 ## start script here
-library(VGAM)
+#library(VGAM)
+library(VGAM, lib.loc="~/R_libs/")
 
 ### data
 

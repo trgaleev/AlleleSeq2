@@ -11,16 +11,16 @@ NTHR                             := 1 # multithread, works for mapping, sorting
 #BOWTIE1                          := /home/fas/gerstein/tg397/distr/bowtie-1.1.1/bowtie
 SAMTOOLS                         := ~/bin/samtools-1.3.1/samtools
 PICARD                           := ~/bin/picard-tools-2.1.1/picard.jar
-JAVA                             := ~/bin/jre1.8.0_77/bin/java
+#JAVA                             := ~/bin/jre1.8.0_77/bin/java
+JAVA                             := java
 JAVA_MEM                         := 80g
 STAR                             := ~/bin/STAR/bin/Linux_x86_64/STAR
 
 
 ### input files / paths ##
 
-READS_1                          := NULL 
-READS_2                          := NULL
-READS                            := NULL # specify READS if SE, or READS_1 and READS_2 if PE (the latter doesn't work yet)
+READS_R1                          :=
+READS_R2                          :=
 
 PGENOME_DIR                      := NULL
 VCF_SAMPLE_ID                    := NULL
@@ -36,6 +36,7 @@ GenomeIdx_STAR_diploid                   := $(PGENOME_DIR)/STAR_idx_diploid
 STAR_outFilterMismatchNoverReadLmax      := 0.03
 STAR_outFilterMatchNminOverLread         := 0.95
 STAR_readFIlesCommand                    := zcat # zcat, cat, etc
+STAR_limitSjdbInsertNsj                  := 1500000 # star default is 1000000
 
 # needed if ASE
 Annotation_diploid                       := $(PGENOME_DIR)/$(VCF_SAMPLE_ID)_diploid.gencode.v19.annotation.gtf
@@ -58,13 +59,17 @@ AMB_MODE                         := adjust # 'adjust' or allelic ratio diff thre
 ### PIPELINE STEPS ###
 ######################
 
-ifeq ($(READS_2),NULL)
-  tmp = $(READS:.fq.gz=)
-  PREFIX = $(tmp:.fastq.gz=)
+empty_string:=
+ifeq ($(READS_R2),$(empty_string))
+  tmp1 = $(READS_R1:.gz=)
+  tmp2 = $(tmp1:.fastq=)
+  PREFIX = $(tmp2:.fq=)
 else
-  tmp = $(READS_2:.fq.gz=)
-  tmp1 = $(tmp:.fastq.gz=)
-  PREFIX = $(tmp1:_2=)
+  tmp11 = $(READS_R1:.gz=)
+  tmp12 = $(tmp11:.fastq=)
+  tmp21 = $(READS_R2:.gz=)
+  tmp22 = $(tmp21:.fastq=)
+  PREFIX = $(tmp12:.fq=)_$(tmp22:.fq=)
 endif
 
 ifeq ($(RM_DUPLICATE_READS),on)
@@ -76,11 +81,12 @@ FINAL_ALIGNMENT_FILENAME = $(PREFIX)_$(ALIGNMENT_MODE)-params.Aligned.sortedByCo
 HetSNV_UNIQALNS_FILENAME = $(PREFIX)_$(ALIGNMENT_MODE)-params_crdsorted_uniqreads_over_hetSNVs.bam
 HetSNV_MMAPALNS_FILENAME = $(PREFIX)_$(ALIGNMENT_MODE)-params_crdsorted_mmapreads_over_hetSNVs.bam
 
-$(info READS: $(READS))
-$(info FINAL_ALIGNMENT_FILENAME: $(FINAL_ALIGNMENT_FILENAME))
-$(info ALIGNMENT_MODE: $(ALIGNMENT_MODE))
+$(info READS_R1: $(READS_R1))
+$(info READS_R2: $(READS_R2))
 $(info PREFIX: $(PREFIX))
+$(info ALIGNMENT_MODE: $(ALIGNMENT_MODE))
 $(info RM_DUPLICATE_READS: $(RM_DUPLICATE_READS))
+$(info FINAL_ALIGNMENT_FILENAME: $(FINAL_ALIGNMENT_FILENAME))
 $(info HetSNV_UNIQALNS_FILENAME: $(HetSNV_UNIQALNS_FILENAME))
 $(info HetSNV_MMAPALNS_FILENAME: $(HetSNV_MMAPALNS_FILENAME))
 
@@ -177,11 +183,11 @@ $(PREFIX)_$(ALIGNMENT_MODE)-params.Aligned.sortedByCoord.out.rmdup.bam: $(PREFIX
 
 
 ## specific additional params will be read from $(STAR_parameters_file)
-$(PREFIX)_custom-params.Aligned.sortedByCoord.out.bam: $(READS)
+$(PREFIX)_custom-params.Aligned.sortedByCoord.out.bam: $(READS_R1)
 	$(STAR) \
 	--runThreadN $(NTHR) \
 	--genomeDir $(GenomeIdx_STAR_diploid) \
-	--readFilesIn $< \
+	--readFilesIn $< $(READS_R2) \
 	--readFilesCommand $(STAR_readFIlesCommand) \
 	--outFileNamePrefix $(@:Aligned.sortedByCoord.out.bam=) \
 	--outSAMattributes All \
@@ -189,17 +195,18 @@ $(PREFIX)_custom-params.Aligned.sortedByCoord.out.bam: $(READS)
 	--sjdbOverhang $(STAR_sjdbOverhang) \
 	--sjdbGTFfile $(Annotation_diploid) \
 	--parametersFiles $(STAR_parameters_file) \
+	--limitSjdbInsertNsj $(STAR_limitSjdbInsertNsj) \
 	--outSAMtype BAM SortedByCoordinate
 	$(SAMTOOLS) flagstat $@ > $@.stat
 	$(SAMTOOLS) index $@
 
 ## optimal? params for RNA-seq; will use as default for ASE
-$(PREFIX)_ASE-params.Aligned.sortedByCoord.out.bam: $(READS)
+$(PREFIX)_ASE-params.Aligned.sortedByCoord.out.bam: $(READS_R1)
 	$(STAR) \
 	--runThreadN $(NTHR) \
 	--genomeDir $(GenomeIdx_STAR_diploid) \
 	--twopassMode Basic \
-	--readFilesIn $< \
+	--readFilesIn $< $(READS_R2) \
 	--readFilesCommand $(STAR_readFIlesCommand) \
 	--outFileNamePrefix $(@:Aligned.sortedByCoord.out.bam=) \
 	--outSAMattributes All \
@@ -208,16 +215,17 @@ $(PREFIX)_ASE-params.Aligned.sortedByCoord.out.bam: $(READS)
 	--outFilterMultimapNmax 999999 \
 	--sjdbOverhang $(STAR_sjdbOverhang) \
 	--sjdbGTFfile $(Annotation_diploid) \
+	--limitSjdbInsertNsj $(STAR_limitSjdbInsertNsj) \
 	--outSAMtype BAM SortedByCoordinate
 	$(SAMTOOLS) flagstat $@ > $@.stat
 	$(SAMTOOLS) index $@	
 
 ## opts similar to AlleleSeq v1.2a bowtie1 -v 2 -m 1 mode; but with small gaps allowed, no splicing; will use as default for ASB
-$(PREFIX)_ASB-params.Aligned.sortedByCoord.out.bam: $(READS)
+$(PREFIX)_ASB-params.Aligned.sortedByCoord.out.bam: $(READS_R1)
 	$(STAR) \
 	--runThreadN $(NTHR) \
 	--genomeDir $(GenomeIdx_STAR_diploid) \
-	--readFilesIn $< \
+	--readFilesIn $< $(READS_R2) \
 	--readFilesCommand $(STAR_readFIlesCommand) \
 	--outFileNamePrefix $(@:Aligned.sortedByCoord.out.bam=) \
 	--outSAMattributes All \
@@ -227,6 +235,7 @@ $(PREFIX)_ASB-params.Aligned.sortedByCoord.out.bam: $(READS)
 	--scoreGap -100 \
 	--scoreGenomicLengthLog2scale 0.0 \
 	--sjdbScore 0 \
+	--limitSjdbInsertNsj $(STAR_limitSjdbInsertNsj) \
 	--outSAMtype BAM SortedByCoordinate
 	$(SAMTOOLS) flagstat $@ > $@.stat
 	$(SAMTOOLS) index $@	

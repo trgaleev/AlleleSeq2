@@ -8,7 +8,8 @@ cnamesref = []
 with open(sys.argv[2],'r') as cf:
    for line in cf:
        if line.startswith('>'):
-           cname = line.strip()[1:]
+           #cname = line.strip()[1:]
+           cname = line.split()[0].strip()[1:]
            if cname in cnames1 or cname in cnames2: 
                cnamesref.append(cname)
 if len(cnamesref) != 25: sys.exit(sys.argv[0]+': unexpected? chromosome names in '+ sys.argv[2])

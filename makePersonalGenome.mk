@@ -29,8 +29,8 @@ ALIGNER                       := STAR
 #ANNOTATION       := ~/refs_annotations/gencode.v24.annotation.gtf
 # hg19
 REFGENOME        := ~/refs_annotations/hg19_ucsc.fasta
-ALLOSOMES_M        := X,Y     
-ALLOSOMES_P        := X,Y    
+ALLOSOMES_M        := X,Y
+ALLOSOMES_P        := X,Y
 # if globally phased and the vcf follows GT=pat|mat convention, can be specified accordingly for male/female
 # otherwise will use all combinations to make sure all possible seqs
 # are there when mapping; hets from non-autosomal should then be removed in AS analyses
