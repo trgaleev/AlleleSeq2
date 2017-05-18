@@ -1,17 +1,17 @@
 import sys
 import numpy
+from collections import defaultdict
 
-snv_list = []
-snv_dict = {}
+snv_dict = defaultdict(int)
+
 for line in sys.stdin:
-    chr, pos0, pos1, inf, cnt = line.split()
-    snv_list.append('\t'.join([inf]))
-    snv_dict['\t'.join([inf])] = int(cnt)
+    inf = line.split()[-1]
+    snv_dict[inf] += 1
 
 rd_median = numpy.median(snv_dict.values())
 
 sys.stdout.write('#chr\tpos\trd\n')
-for snv in snv_list:
+for snv in snv_dict:
     sys.stdout.write('\t'.join(snv.split('_')[:2]+[str(snv_dict[snv]/rd_median)])+'\n')
 
-sys.stderr.write('rd_median:\t'+str(rd_median)+'\n')
+sys.stderr.write('median rd:\t'+str(rd_median)+'\n')

@@ -6,7 +6,7 @@ JAVA                          := /usr/bin/java
 BOWTIE_build                  := ~/bin/bowtie-1.1.1/bowtie-build
 BOWTIE2_build                 := ~/bin/bowtie2-2.3.1/bowtie2-build
 LIFTOVER                      := ~/bin/liftOver
-#BEDTOOLS_intersectBed         := ~/bin/bedtools2/bin/intersectBed
+BEDTOOLS_intersectBed         := ~/bin/bedtools2/bin/intersectBed
 BEDTOOLS_coverageBed          := ~/bin/bedtools2/bin/coverageBed
 SAMTOOLS                      := ~/bin/samtools-1.3.1/samtools
 MAX_RAM                       := 45G
@@ -24,21 +24,25 @@ ALIGNER                       := STAR
 
 #### paths
 
-# hg38
-#REFGENOME        := ~/refs_annotations/Homo_sapiens_assembly38.fasta
-#ANNOTATION       := ~/refs_annotations/gencode.v24.annotation.gtf
-# hg19
-REFGENOME        := ~/refs_annotations/hg19_ucsc.fasta
+REFGENOME_VERSION             := GRCh37   #GRCh38 or CRCh37
+
+ifeq ($(REFGENOME_VERSION), GRCh38)
+  REFGENOME        := ~/refs_annotations/GRCh38_ucsc.fasta
+  ADDNL_SEQNS      := ~/refs_annotations/GRCh38_ucsc_non_chr_scaffolds_only.fasta
+  ANNOTATION       := ~/refs_annotations/gencode.v24.annotation.gtf
+else ifeq ($(REFGENOME_VERSION), GRCh37)
+  REFGENOME        := ~/refs_annotations/hg19_ucsc.fasta
+  ADDNL_SEQNS      := ~/refs_annotations/hg19_ucsc_non_chr_scaffolds_only.fasta
+  ANNOTATION       := ~/refs_annotations/gencode.v19.annotation.gtf
+endif
+
 ALLOSOMES_M        := X,Y
 ALLOSOMES_P        := X,Y
 # if globally phased and the vcf follows GT=pat|mat convention, can be specified accordingly for male/female
 # otherwise will use all combinations to make sure all possible seqs
 # are there when mapping; hets from non-autosomal should then be removed in AS analyses
 
-#ADDNL_SEQNS    :=
-ADDNL_SEQNS      := ~/refs_annotations/hg19_ucsc_non_chr_scaffolds_only.fasta
 
-ANNOTATION       := ~/refs_annotations/gencode.v19.annotation.gtf
 
 
 # (required) inputs ####
@@ -71,9 +75,10 @@ else ifeq ($(ALIGNER),bowtie2)
 endif
 
 
-
+$(info REFGENOME_VERSION: $(REFGENOME_VERSION))
 $(info REFGENOME: $(REFGENOME))
 $(info ANNOTATION: $(ANNOTATION))
+$(info ADDNL_SEQNS: $(ADDNL_SEQNS))
 $(info FILE_PATH_VCF: $(FILE_PATH_VCF))
 $(info FILE_PATH_VCF_INDELS: $(FILE_PATH_VCF_INDELS))
 $(info FILE_PATH_VCF_SVS: $(FILE_PATH_VCF_SVS))
@@ -193,14 +198,26 @@ $(OUTPUT_DIR)/STAR_idx_diploid_Log.out: $(OUTPUT_DIR)/$(VCF_SAMPLE_ID)_diploid.$
 # in the wgs bam file
 # also test samtools bedcov
 
+#$(OUTPUT_DIR)/$(VCF_SAMPLE_ID)_hetSNVs_rd.tab: $(OUTPUT_DIR)/$(VCF_SAMPLE_ID)_hetSNVs_ref.bed
+#	$(SAMTOOLS) view -H $(FILE_PATH_BAM) | grep -P "@SQ\tSN:" | awk -F"\t" '{print $$1"\t"$$2"\t"$$3}' | \
+#	sed 's/@SQ\tSN://' | sed 's/\tLN:/\t/' > $(OUTPUT_DIR)/genome.txt 
+#	awk '{print $$1"\t"($$3-1000)"\t"($$3+1000)"\t"$$4}' $< | grep -v "-" | \
+#	python $(PL)/feed_sorted_check_names.py $(OUTPUT_DIR)/genome.txt | \
+#	$(BEDTOOLS_coverageBed) -a stdin -b $(FILE_PATH_BAM) \
+#		-g $(OUTPUT_DIR)/genome.txt -sorted -counts | python $(PL)/calculate_rd.py > $@
+	
+
+
+# actually, having the larger file as -a is better for the memory
+
 $(OUTPUT_DIR)/$(VCF_SAMPLE_ID)_hetSNVs_rd.tab: $(OUTPUT_DIR)/$(VCF_SAMPLE_ID)_hetSNVs_ref.bed
-	$(SAMTOOLS) view -H $(FILE_PATH_BAM) | grep -P "@SQ\tSN:" | \
+	$(SAMTOOLS) view -H $(FILE_PATH_BAM) | grep -P "@SQ\tSN:" | awk -F"\t" '{print $$1"\t"$$2"\t"$$3}' | \
 	sed 's/@SQ\tSN://' | sed 's/\tLN:/\t/' > $(OUTPUT_DIR)/genome.txt 
 	awk '{print $$1"\t"($$3-1000)"\t"($$3+1000)"\t"$$4}' $< | grep -v "-" | \
 	python $(PL)/feed_sorted_check_names.py $(OUTPUT_DIR)/genome.txt | \
-	$(BEDTOOLS_coverageBed) -a stdin -b $(FILE_PATH_BAM) \
-		-g $(OUTPUT_DIR)/genome.txt -sorted -counts | python $(PL)/calculate_rd.py > $@
-	
+	$(BEDTOOLS_intersectBed) -a $(FILE_PATH_BAM) -b stdin \
+		-g $(OUTPUT_DIR)/genome.txt -sorted -wb -bed | python $(PL)/calculate_rd.py > $@
+
 
 #$(OUTPUT_DIR)/bowtie_build_diploid.log: $(OUTPUT_DIR)/$(VCF_SAMPLE_ID)_h2.fa $(OUTPUT_DIR)/$(VCF_SAMPLE_ID)_h1.fa 
 #	$(BOWTIE_build) --offrate 2 \
