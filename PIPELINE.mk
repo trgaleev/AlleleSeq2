@@ -39,7 +39,14 @@ STAR_readFIlesCommand                    := zcat # zcat, cat, etc
 STAR_limitSjdbInsertNsj                  := 1500000 # star default is 1000000
 
 # needed if ASE
-Annotation_diploid                       := $(PGENOME_DIR)/$(VCF_SAMPLE_ID)_diploid.gencode.v19.annotation.gtf
+REFGENOME_VERSION             := GRCh37   #GRCh38 or CRCh37
+
+ifeq ($(REFGENOME_VERSION), GRCh38)
+  Annotation_diploid       := $(PGENOME_DIR)/$(VCF_SAMPLE_ID)_diploid.gencode.v24.annotation.gtf
+else ifeq ($(REFGENOME_VERSION), GRCh37)
+  Annotation_diploid       := $(PGENOME_DIR)/$(VCF_SAMPLE_ID)_diploid.gencode.v19.annotation.gtf
+endif
+
 STAR_sjdbOverhang                        := 100  #STAR default will work as well as the ideal (readlength -1) value according to the manual
 
 # if custom alignment mode
@@ -158,7 +165,7 @@ $(PREFIX)_h2_uniqreads.mpileup: $(HetSNV_UNIQALNS_FILENAME)
 # non-uniq alns over hetSNVs:
 $(PREFIX)_$(ALIGNMENT_MODE)-params_crdsorted_mmapreads_over_hetSNVs.bam: $(FINAL_ALIGNMENT_FILENAME)
 	cat $(PGENOME_DIR)/$(VCF_SAMPLE_ID)_hetSNVs_h1.bed $(PGENOME_DIR)/$(VCF_SAMPLE_ID)_hetSNVs_h2.bed | \
-	$(SAMTOOLS) view -h -L - $< | grep -wv 'NH:i:1' | \
+	$(SAMTOOLS) view -h -L - $< | awk '$$5!="255" {print $$0}' | \
 	$(SAMTOOLS) view -b - > $@
 	$(SAMTOOLS) index $@
 	$(SAMTOOLS) flagstat $@ > $@.stat
@@ -166,7 +173,7 @@ $(PREFIX)_$(ALIGNMENT_MODE)-params_crdsorted_mmapreads_over_hetSNVs.bam: $(FINAL
 # uniq alns over hetSNVs:
 $(PREFIX)_$(ALIGNMENT_MODE)-params_crdsorted_uniqreads_over_hetSNVs.bam: $(FINAL_ALIGNMENT_FILENAME)
 	cat $(PGENOME_DIR)/$(VCF_SAMPLE_ID)_hetSNVs_h1.bed $(PGENOME_DIR)/$(VCF_SAMPLE_ID)_hetSNVs_h2.bed | \
-	$(SAMTOOLS) view -h -L - $< | grep -w '^@..\|NH:i:1' | \
+	$(SAMTOOLS) view -h -q 255 -L - $< | \
 	$(SAMTOOLS) view -b - > $@
 	$(SAMTOOLS) index $@
 	$(SAMTOOLS) flagstat $@ > $@.stat
@@ -192,6 +199,7 @@ $(PREFIX)_custom-params.Aligned.sortedByCoord.out.bam: $(READS_R1)
 	--outFileNamePrefix $(@:Aligned.sortedByCoord.out.bam=) \
 	--outSAMattributes All \
 	--outFilterMultimapNmax 999999 \
+	--scoreGenomicLengthLog2scale 0.0 \
 	--sjdbOverhang $(STAR_sjdbOverhang) \
 	--sjdbGTFfile $(Annotation_diploid) \
 	--parametersFiles $(STAR_parameters_file) \
@@ -213,6 +221,7 @@ $(PREFIX)_ASE-params.Aligned.sortedByCoord.out.bam: $(READS_R1)
 	--outFilterMismatchNoverReadLmax $(STAR_outFilterMismatchNoverReadLmax) \
 	--outFilterMatchNminOverLread $(STAR_outFilterMatchNminOverLread) \
 	--outFilterMultimapNmax 999999 \
+	--scoreGenomicLengthLog2scale 0.0 \
 	--sjdbOverhang $(STAR_sjdbOverhang) \
 	--sjdbGTFfile $(Annotation_diploid) \
 	--limitSjdbInsertNsj $(STAR_limitSjdbInsertNsj) \
@@ -239,6 +248,14 @@ $(PREFIX)_ASB-params.Aligned.sortedByCoord.out.bam: $(READS_R1)
 	--outSAMtype BAM SortedByCoordinate
 	$(SAMTOOLS) flagstat $@ > $@.stat
 	$(SAMTOOLS) index $@	
+
+
+
+# * --outFilterMultimapScoreRange default =1 works fine for making sure read mapping to the right allele with one hetSNV gets a higher score
+# 	and treated as uniquely mapped: the score diff between a perfectly mapped read and one with one mismatch is 2 (with --scoreGenomicLengthLog2scale 0.0):
+# 	one less mapped base and -1 for mismatch?
+#
+
 
 
 ## opts similar to AlleleSeq v1.2a bowtie1 -v 2 -m 1 mode
