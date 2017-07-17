@@ -55,7 +55,16 @@ def pileup_to_basecnts (filelist):
 
                 basecnts['warning'] = warning
 
-                pileup_dict[chr+'_'+crd] = basecnts
+                # pileup_dict[chr+'_'+crd] = basecnts
+                # to accomodate more than 2 sets of mpileup files combined for the same individual and assay
+                if chr+'_'+crd not in pileup_dict:
+                    pileup_dict[chr+'_'+crd] = basecnts
+                else:
+                    pileup_dict[chr+'_'+crd]['A'] += basecnts['A']
+                    pileup_dict[chr+'_'+crd]['C'] += basecnts['C']
+                    pileup_dict[chr+'_'+crd]['G'] += basecnts['G']
+                    pileup_dict[chr+'_'+crd]['T'] += basecnts['T']
+                    pileup_dict[chr+'_'+crd]['warning'] += (','+basecnts['warning'])
 
     return pileup_dict
 

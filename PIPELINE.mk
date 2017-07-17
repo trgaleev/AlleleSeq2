@@ -88,6 +88,7 @@ FINAL_ALIGNMENT_FILENAME = $(PREFIX)_$(ALIGNMENT_MODE)-params.Aligned.sortedByCo
 HetSNV_UNIQALNS_FILENAME = $(PREFIX)_$(ALIGNMENT_MODE)-params_crdsorted_uniqreads_over_hetSNVs.bam
 HetSNV_MMAPALNS_FILENAME = $(PREFIX)_$(ALIGNMENT_MODE)-params_crdsorted_mmapreads_over_hetSNVs.bam
 
+$(info PGENOME_DIR: $(PGENOME_DIR))
 $(info READS_R1: $(READS_R1))
 $(info READS_R2: $(READS_R2))
 $(info PREFIX: $(PREFIX))
@@ -96,7 +97,7 @@ $(info RM_DUPLICATE_READS: $(RM_DUPLICATE_READS))
 $(info FINAL_ALIGNMENT_FILENAME: $(FINAL_ALIGNMENT_FILENAME))
 $(info HetSNV_UNIQALNS_FILENAME: $(HetSNV_UNIQALNS_FILENAME))
 $(info HetSNV_MMAPALNS_FILENAME: $(HetSNV_MMAPALNS_FILENAME))
-
+$(info $(empty_string))
 
 
 
@@ -117,8 +118,7 @@ interestingHets.binom.tsv: $(PREFIX)_final_counts.tsv
 
 # allelic ratio distrs
 $(PREFIX)_final_counts_ref_allele_ratios.pdf: $(PREFIX)_final_counts.tsv
-	cat $< | Rscript $(PL)/counts_allelic_ratio_distribution_plot.R $(PREFIX)_final_counts
-
+	cat $< | python $(PL)/plot_AllelicRatio_distribution.py $(PREFIX)_final_counts 
 # filter out sites in potential cnv regions and in non-autosomal chr; 
 # and sites with seemingly misphased/miscalled nearby variants
 # filter/adjust sites imbalanced likely due to unaccounted multi-mapping reads 
@@ -127,17 +127,17 @@ $(PREFIX)_final_counts.tsv: $(PREFIX)_raw_counts.tsv $(PREFIX)_h1_mmapreads.mpil
 	python $(PL)/filter_cnv_sites.py $(PREFIX)_discarded_HetSNVs.tsv $(PGENOME_DIR)/$(VCF_SAMPLE_ID)_hetSNVs_rd.tab | \
 	python $(PL)/filter_chr.py $(PREFIX)_discarded_HetSNVs.tsv | \
 	python $(PL)/filter_phase_warnings.py $(PREFIX)_discarded_HetSNVs.tsv | \
-	python $(PL)/filter_sites_w_mmaps.py $(PREFIX)_h1_mmapreads.mpileup $(PREFIX)_h2_mmapreads.mpileup $(AMB_MODE) \
-	$(PREFIX)_discarded_HetSNVs.tsv filter_sites_w_mmaps.log > $@
+	python $(PL)/filter_sites_w_mmaps.py $(AMB_MODE) $(PREFIX)_discarded_HetSNVs.tsv filter_sites_w_mmaps.log \
+		$(PREFIX)_h1_mmapreads.mpileup $(PREFIX)_h2_mmapreads.mpileup > $@
 
 # allelic ratio distrs
 $(PREFIX)_raw_counts_ref_allele_ratios.pdf: $(PREFIX)_raw_counts.tsv
-	cat $< | Rscript $(PL)/counts_allelic_ratio_distribution_plot.R $(PREFIX)_raw_counts
+	cat $< | python $(PL)/plot_AllelicRatio_distribution.py $(PREFIX)_raw_counts
 
 # counts
 $(PREFIX)_raw_counts.tsv: $(PREFIX)_h1_uniqreads.mpileup $(PREFIX)_h2_uniqreads.mpileup
-	python $(PL)/pileup2counts.py $(PGENOME_DIR)/$(VCF_SAMPLE_ID)_hetSNVs_h1.bed $(PGENOME_DIR)/$(VCF_SAMPLE_ID)_hetSNVs_h2.bed \
-	$(PREFIX)_h1_uniqreads.mpileup $(PREFIX)_h2_uniqreads.mpileup $(Cntthresh) > $@
+	python $(PL)/pileup2counts.py $(Cntthresh) $(PGENOME_DIR)/$(VCF_SAMPLE_ID)_hetSNVs_h1.bed $(PGENOME_DIR)/$(VCF_SAMPLE_ID)_hetSNVs_h2.bed \
+	$(PREFIX)_h1_uniqreads.mpileup $(PREFIX)_h2_uniqreads.mpileup > $@
 
 
 # pileups

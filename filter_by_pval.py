@@ -1,6 +1,6 @@
 import sys
 
-if sys.argv[1]=='FDR.binom.txt':
+if 'FDR.binom.txt' in sys.argv[1]:
     with open(sys.argv[1], 'r') as infdr:
         for line in infdr:
             if line.startswith('Target'): pth = float(line.split()[-1])

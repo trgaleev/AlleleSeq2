@@ -14,12 +14,12 @@ def rmsiteswrite(l, mm_counts, comment):
     rm_hetSNV_f.write('\t'.join(l.split('\t')[:2] + [mm_cnts+'__'+comment])+'\n')
 
 
-log = open(sys.argv[5],'w')
-rm_hetSNV_f = open(sys.argv[4], 'a')
-mode = sys.argv[3]
+log = open(sys.argv[3],'w')
+rm_hetSNV_f = open(sys.argv[2], 'a')
+mode = sys.argv[1]
 log.write('\t'.join(['chr_pos', 'max_hap_mm_cnt_A_C_G_T_N', 'mm_h1_warn;mm_h2_warn;mm_warn;result\n']))
 
-mm_pileup_dict = read_pileup.pileup_to_basecnts(sys.argv[1:3])
+mm_pileup_dict = read_pileup.pileup_to_basecnts(sys.argv[4:])
 
 sys.stdout.write(sys.stdin.readline().strip()+'\tmmap_log\n')
 

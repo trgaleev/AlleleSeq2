@@ -10,8 +10,8 @@ hetSNV_dict=defaultdict(dict)
 hetSNV_list=[]
 
 # read the h1 and h2 coords
-with open(sys.argv[1],'r') as in_h2:
-    for line in in_h2:
+with open(sys.argv[2],'r') as in_h1:
+    for line in in_h1:
         line = line.strip()
         h_chr, _, h_crd, ref_info = line.split('\t')
         #h_cr, h = h_chr.split('_')
@@ -22,7 +22,7 @@ with open(sys.argv[1],'r') as in_h2:
         hetSNV_dict[r_chr+'_'+r_crd]['a1'] = a1
         hetSNV_dict[r_chr+'_'+r_crd]['a2'] = a2
 
-with open(sys.argv[2],'r') as in_h2:
+with open(sys.argv[3],'r') as in_h2:
     for line in in_h2:
         line=line.strip()
         h_chr, _, h_crd, ref_info = line.split('\t')
@@ -37,7 +37,7 @@ with open(sys.argv[2],'r') as in_h2:
 
 
 # read the pileups
-pileup_dict = read_pileup.pileup_to_basecnts(sys.argv[3:5])
+pileup_dict = read_pileup.pileup_to_basecnts(sys.argv[4:])
 
 sys.stdout.write('\t'.join([
     '#chr',
@@ -76,7 +76,7 @@ for k in hetSNV_list:
 
     tot_cnt = basecnts[hetSNV_dict[k]['a1']]+basecnts[hetSNV_dict[k]['a2']]
 
-    if tot_cnt >= int(sys.argv[5]):
+    if tot_cnt >= int(sys.argv[1]):
 
         ref_cnt = basecnts[hetSNV_dict[k]['r_a']]
         pbinom=binom.binomtest(ref_cnt, tot_cnt, 0.5)
