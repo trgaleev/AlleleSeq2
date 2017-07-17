@@ -40,11 +40,10 @@ STAR_limitSjdbInsertNsj                  := 1500000 # star default is 1000000
 
 # needed if ASE
 REFGENOME_VERSION             := GRCh37   #GRCh38 or CRCh37
+Annotation_diploid            := $(PGENOME_DIR)/$(VCF_SAMPLE_ID)_diploid.gencode.v19.annotation.gtf
 
 ifeq ($(REFGENOME_VERSION), GRCh38)
-  Annotation_diploid       := $(PGENOME_DIR)/$(VCF_SAMPLE_ID)_diploid.gencode.v24.annotation.gtf
-else ifeq ($(REFGENOME_VERSION), GRCh37)
-  Annotation_diploid       := $(PGENOME_DIR)/$(VCF_SAMPLE_ID)_diploid.gencode.v19.annotation.gtf
+  Annotation_diploid          := $(PGENOME_DIR)/$(VCF_SAMPLE_ID)_diploid.gencode.v24.annotation.gtf
 endif
 
 STAR_sjdbOverhang                        := 100  #STAR default will work as well as the ideal (readlength -1) value according to the manual
