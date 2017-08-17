@@ -6,9 +6,9 @@
 ## allow cmd line arguments
 args=(commandArgs(TRUE))
 
-folder=args[1]
-if (length(args)>2){
-	FDR.thresh = as.numeric(args[3])
+#folder=args[1]
+if (length(args)>5){
+	FDR.thresh = as.numeric(args[6])
 }else{
 	FDR.thresh = 0.05
 }
@@ -22,9 +22,10 @@ library(VGAM, lib.loc="~/R_libs/")
 
 ### data
 
-data1 = read.table(file('stdin'), header=T, stringsAsFactors=F, comment.char="%", check.names=F)
+data1 = read.table(args[1], header=T, stringsAsFactors=F, comment.char="%", check.names=F)
 print(head(data1))
-filename2 = "betabinomial/b_chosen.grad.txt"
+#filename2 = "betabinomial/b_chosen.grad.txt"
+filename2 = paste0(args[2],'/',"b_chosen.grad.txt")
 data2 = read.table(filename2, header=T, stringsAsFactors=F)
 
 ## parameters
@@ -192,17 +193,18 @@ FDR.txt = FDR.txt[-nrow(FDR.txt),]
 ## take in counts.txt and filter by p.betabin and cnv
 #interestingHets.betabinom = data1[data1$p.betabin<=p.choice.betabin,]
 interestingHets.betabinom = data1[(data1$p.betabin<=p.choice.betabin.2) & (data1$cnv>=0.5 & data1$cnv<=1.5),]
+print (head(interestingHets.betabinom))
 
 ## printing files
-write.table(data1,file="counts.betabinom.txt", sep="\t",
+write.table(data1,file=args[3], sep="\t",
             row.names=FALSE,quote=FALSE)
-write.table(interestingHets.betabinom,file="interestingHets.betabinom.txt", sep="\t",
+write.table(interestingHets.betabinom,file=args[4], sep="\t",
             row.names=FALSE,quote=FALSE)
-write.table(FDR.txt,file="FDR.betabinomial.txt",sep="\t",row.names=FALSE,quote=FALSE)
+write.table(FDR.txt,file=args[5],sep="\t",row.names=FALSE,quote=FALSE)
 write(paste("FDR.threshold =",FDR.thresh),
-      file="FDR.betabinomial.txt",append=TRUE)
+      file=args[5],append=TRUE)
 write(rbind(paste("p.choice.bin.old =",p.choice.bin),paste("p.choice.betabin.old =",p.choice.betabin)),
-      file="FDR.betabinomial.txt",append=TRUE)
+      file=args[5],append=TRUE)
 write(rbind(paste("p.choice.bin =",p.choice.bin.2),paste("p.choice.betabin =",p.choice.betabin.2)),
-      file="FDR.betabinomial.txt",append=TRUE)
+      file=args[5],append=TRUE)
 

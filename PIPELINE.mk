@@ -108,8 +108,8 @@ all: $(PREFIX)_raw_counts_ref_allele_ratios.pdf $(PREFIX)_final_counts_ref_allel
 
 # this seems to work, but the way it deals with paths, filenames, etc needs to be cleaned up
 interestingHets.betabinom.tsv: $(PREFIX)_final_counts.tsv 
-	cat $< | Rscript $(PL)/alleledb_calcOverdispersion.R $(CURDIR) $(PREFIX)_final_counts.tsv
-	cat $< | Rscript $(PL)/alleledb_alleleseqBetabinomial.R $(CURDIR) $(PREFIX)_final_counts.tsv $(FDR_CUTOFF)
+	Rscript $(PL)/alleledb_calcOverdispersion.R $< betabinomial
+	Rscript $(PL)/alleledb_alleleseqBetabinomial.R $< betabinomial counts.betabinom.tsv interestingHets.betabinom.tsv FDR.betabinomial.txt $(FDR_CUTOFF)
 
 interestingHets.binom.tsv: $(PREFIX)_final_counts.tsv
 	python $(PL)/FalsePos.py $< $(FDR_SIMS) $(FDR_CUTOFF) > FDR.binom.txt

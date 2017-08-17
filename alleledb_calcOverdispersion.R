@@ -97,16 +97,18 @@ nulldistrib <- function(minN,maxN,p,w,binSize,yuplimit,distrib="binomial",b=0)
 ### set parameters
 
 args = commandArgs(trailingOnly=TRUE)
-filename = args[2]
+filename = args[1]
  
-data = read.table(file('stdin'), header=T, stringsAsFactors=F, comment.char="%", check.names=FALSE)
+data = read.table(filename, header=T, stringsAsFactors=F, comment.char="%", check.names=FALSE)
 
 print (head(data))
 
-dir.create("betabinomial")
-folder = args[1]
-setwd(paste(folder,"/betabinomial",sep=''))
-
+#dir.create("betabinomial")
+dir.create(args[2])
+#folder = args[3]
+#setwd(paste(folder,"/betabinomial",sep=''))
+#setwd(paste(folder, "/", args[2],sep=''))
+setwd(args[2])
 colors <- c("green","blue","orange","cyan","pink","purple",
             "brown","black","slategray1","violetred","tan","deeppink","darkgreen", 
             "orchid","darksalmon","antiquewhite3","magenta","darkblue","peru","slateblue",
@@ -123,7 +125,6 @@ binSize=40
 bins=pretty(0:1,binSize)
 r.min = 0
 r.max = 1
-
 ## graded weights for SSE calculation
 r = seq(r.min,r.max,(r.max - r.min)/((length(bins) - 1)/2))
 r = r[2:length(r)]
@@ -145,7 +146,6 @@ empirical = h$counts/sum(h$counts)
 # weight by empirical counts
 t = as.data.frame(table(data$sum_ref_n_alt_cnts), stringsAsFactors=F)
 w = matrix(0,max(data$sum_ref_n_alt_cnts),1)
-
 for (jj in 1:nrow(t))
 {
   w[as.integer(t[jj,1]),1] = t[jj,2]
