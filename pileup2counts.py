@@ -79,6 +79,13 @@ for k in hetSNV_list:
     if tot_cnt >= int(sys.argv[1]):
 
         ref_cnt = basecnts[hetSNV_dict[k]['r_a']]
+	if ref_cnt > tot_cnt:
+		sys.stderr.write(sys.argv[0] +' WARNING:\t' + k + ', ref allele cnt (' + str(ref_cnt) + ') is larger than ref + alt allele counts (' + str(tot_cnt) + ')\n')
+		sys.stderr.write(str(basecnts) + '\n')
+		sys.stderr.write('miscalled multi-allelic variant? Skipping this hetSNV\n')
+		continue
+	#print basecnts
+	#print k +'\t' + str(ref_cnt) + '\t' + str(tot_cnt) + '\n'
         pbinom=binom.binomtest(ref_cnt, tot_cnt, 0.5)
         sys.stdout.write('\t'.join([    
             k.split('_')[0],

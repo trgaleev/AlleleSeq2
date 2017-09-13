@@ -7,10 +7,10 @@ e_list = []
 e_dict = {}
 for line in sys.stdin:
 	#chr1_h1	1055394	1055395	D00777:83:C8R9PACXX:5:2107:17632:19962/1	255	-	1055295	1055396	0,0,0	1	101,	0,	1	chr1_h1	1055394	1055395	ENSG00000188157.13
-	rname = line.split()[3].split('/')[0]
-	ename = line.split()[-1]
+	rname = line.split()[7].split('/')[0]
+	ename = line.split()[3]
 	hap = line.split()[0].split('_')[1]
-	snv = line.split()[13]+'_'+line.split()[14]
+	snv = line.split()[0]+'_'+line.split()[1]
 	if ename not in e_dict:
 		e_list.append(ename)
 		e_dict[ename]={'h1':{}, 'h2':{}, 'snv_count': 0, 'snvs':':'}

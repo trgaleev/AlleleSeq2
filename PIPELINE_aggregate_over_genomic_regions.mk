@@ -28,6 +28,7 @@ empty_string:=
 
 $(info INTERVALS_FILE: $(INTERVALS_FILE))
 $(info COUNTS_FILE: $(COUNTS_FILE))
+$(info UNIQ_ALN_FILE: $(UNIQ_ALN_FILE))
 $(info $(empty_string))
 
 
@@ -53,8 +54,14 @@ interval_interestingHets.binom.tsv: interval_counts.tsv
 interval_counts_h1_allele_ratios.pdf: interval_counts.tsv
 	cat $< | python $(PL)/plot_AllelicRatio_distribution.py $< h1_allele_ratio
 
+
+# allowing multiple UNIQ_ALN_FILE files, but probably slower (since became -b instead of -a), also changes to intersect2counts.py to accomodate output file format
+#interval_counts.tsv: hets_intervals_h1.bed hets_intervals_h2.bed
+#        $(BEDTOOLS_intersectBed) -a $(UNIQ_ALN_FILE) -b hets_intervals_h1.bed hets_intervals_h2.bed -split -wb -bed | \
+#                python $(PL)/intersect2counts.py > $@
+
 interval_counts.tsv: hets_intervals_h1.bed hets_intervals_h2.bed
-	$(BEDTOOLS_intersectBed) -a $(UNIQ_ALN_FILE) -b hets_intervals_h1.bed hets_intervals_h2.bed -split -wb -bed | \
+	cat hets_intervals_h1.bed hets_intervals_h2.bed | $(BEDTOOLS_intersectBed) -a stdin -b $(UNIQ_ALN_FILE) -split -wb -bed | \
 		python $(PL)/intersect2counts.py > $@
 
 hets_intervals_h1.bed hets_intervals_h2.bed: $(INTERVALS_FILE) $(COUNTS_FILE)
