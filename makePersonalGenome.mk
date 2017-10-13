@@ -27,20 +27,32 @@ ALIGNER                       := STAR
 REFGENOME_VERSION             := GRCh37   #GRCh38 or CRCh37
 
 ifeq ($(REFGENOME_VERSION), GRCh38)
-  REFGENOME        := ~/refs_annotations/GRCh38_ucsc.fasta
-  ADDNL_SEQNS      := ~/refs_annotations/GRCh38_ucsc_non_chr_scaffolds_only.fasta
+
+## Primary assembly
+
+  ### Assebmled chromosomes (only 1-22, X, Y, M will be used by vcf2diploid if the reference has other contigs) with PAR and repeat array regions hard masked:
+  REFGENOME        := ~/refs_annotations/UCSC_Analysis_Set_GRCh38/hg38.analysisSet.fasta
+  ### Unlocalized sequences (_random) and unplaced sequences (chrU_) of the primary assebmly (in addition to assembled chromosomes)
+  ### + EBV&decoy contigs (without alternate contigs, alternate scaffolds or alternate loci (_alt)).
+  ### These will be added to the diploid personal genome to siphon off reads corresponding to those during mapping
+  ### will not be used for readcounting, AS calling, etc
+  ADDNL_SEQNS      := ~/refs_annotations/UCSC_Analysis_Set_GRCh38/hg38.analysisSet_unplaced_unlocalized_EBV_contigs_only.fasta
+
   ANNOTATION       := ~/refs_annotations/gencode.v24.annotation.gtf
+
 else ifeq ($(REFGENOME_VERSION), GRCh37)
+
   REFGENOME        := ~/refs_annotations/hg19_ucsc.fasta
   ADDNL_SEQNS      := ~/refs_annotations/hg19_ucsc_non_chr_scaffolds_only.fasta
   ANNOTATION       := ~/refs_annotations/gencode.v19.annotation.gtf
+
 endif
 
 ALLOSOMES_M        := X,Y
 ALLOSOMES_P        := X,Y
 # if globally phased and the vcf follows GT=pat|mat convention, can be specified accordingly for male/female
 # otherwise will use all combinations to make sure all possible seqs
-# are there when mapping; hets from non-autosomal should then be removed in AS analyses
+# are there when mapping; hets from non-autosomal should be removed from AS calls then
 
 
 
