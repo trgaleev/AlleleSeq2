@@ -22,6 +22,10 @@ for line in sys.stdin:
     if not line.startswith('#'):
         CHROM,POS,ID,REF,ALT,QUAL,FILTER,INFO,FORMAT = line.split('\t')[:9]
         if FILTER=='PASS': 
+            # require all PASS records to be phased: if some aren't, vcf2diploid will phase them randomly,
+            # but to keep track which allele goes to which haplotype, this (random phasing) needs to be done before vcf2diploid
+            # todo: incorporate this step into makePersonalGenome.mk 
+            if '/' in line.split('\t')[sample_col_idx].split(':')[0]: sys.exit('\n\n' + sys.argv[0] + '\n Error: the variant in the following line is not phased\n' + line)
             GTl=line.split('\t')[sample_col_idx].split(':')[0].replace('/','|').split('|')
             al=[REF]+ALT.split(',')
             if al[int(GTl[0])]!=al[int(GTl[1])] and len(al[int(GTl[0])])==len(al[int(GTl[1])])==len(REF)==1:
