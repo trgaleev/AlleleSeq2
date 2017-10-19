@@ -8,7 +8,7 @@ with open(sys.argv[2], 'r') as cnvfile:
             cnv_dict[chrm+'_'+snppos] = rd
 
 
-with open(sys.argv[1], 'w') as rm_hetSNV_f:
+with open(sys.argv[1], 'a') as rm_hetSNV_f:
     for line in sys.stdin:
         if not line.startswith('#'):
             (chr,ref_coord,h1_coord,h2_coord,ref_allele,h1_allele,h2_allele,

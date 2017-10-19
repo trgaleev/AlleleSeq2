@@ -6,8 +6,13 @@ import read_pileup
 from collections import defaultdict
 
 
-hetSNV_dict=defaultdict(dict)
-hetSNV_list=[]
+hetSNV_dict = defaultdict(dict)
+hetSNV_list = []
+bases = set(['A', 'C', 'G', 'T', 'N'])
+discarded = set([])
+
+rmvdhets_file = open(sys.argv[4],'w')
+
 
 # read the h1 and h2 coords
 with open(sys.argv[2],'r') as in_h1:
@@ -16,6 +21,10 @@ with open(sys.argv[2],'r') as in_h1:
         h_chr, _, h_crd, ref_info = line.split('\t')
         #h_cr, h = h_chr.split('_')
         r_chr, r_crd, r_a, a1, a2 = ref_info.split('_')
+        if a1 not in bases or a2 not in bases: 
+            rmvdhets_file.write('\t'.join([r_chr, r_crd, ref_info]) + '\n')
+            discarded.add(r_chr + '_' + r_crd)
+            continue
         #hetSNV_dict[r_chr+'_'+r_crd][h]={'crd':h_crd}
         hetSNV_dict[r_chr+'_'+r_crd]['h1_pos'] = h_chr+'_'+h_crd
         hetSNV_dict[r_chr+'_'+r_crd]['r_a'] = r_a
@@ -28,6 +37,9 @@ with open(sys.argv[3],'r') as in_h2:
         h_chr, _, h_crd, ref_info = line.split('\t')
         #h_cr, h = h_chr.split('_')
         r_chr, r_crd, r_a, a1, a2 = ref_info.split('_')
+        if a1 not in bases or a2 not in bases: 
+            if r_chr + '_' + r_crd not in discarded: rmvdhets_file.write('\t'.join([r_chr, r_crd, ref_info]) + '\n')
+            continue
         #hetSNV_dict[r_chr+'_'+r_crd][h]={'crd':h_crd}
         hetSNV_dict[r_chr+'_'+r_crd]['h2_pos'] = h_chr+'_'+h_crd
         hetSNV_dict[r_chr+'_'+r_crd]['r_a'] = r_a
@@ -35,9 +47,12 @@ with open(sys.argv[3],'r') as in_h2:
         hetSNV_dict[r_chr+'_'+r_crd]['a2'] = a2
         hetSNV_list.append(r_chr+'_'+r_crd)
 
+rmvdhets_file.close()
+
+
 
 # read the pileups
-pileup_dict = read_pileup.pileup_to_basecnts(sys.argv[4:])
+pileup_dict = read_pileup.pileup_to_basecnts(sys.argv[5:])
 
 sys.stdout.write('\t'.join([
     '#chr',

@@ -70,6 +70,7 @@ $(PREFIX)_raw_counts_ref_allele_ratios.pdf: $(PREFIX)_raw_counts.tsv
 # counts
 $(PREFIX)_raw_counts.tsv: $(INPUT_UNIQ_READS_PILEUP_FILES)
 	python $(PL)/pileup2counts.py $(Cntthresh) $(PGENOME_DIR)/$(VCF_SAMPLE_ID)_hetSNVs_h1.bed $(PGENOME_DIR)/$(VCF_SAMPLE_ID)_hetSNVs_h2.bed \
+	$(PREFIX)_discarded_HetSNVs.tsv \
 	$(INPUT_UNIQ_READS_PILEUP_FILES) > $@
 
 
