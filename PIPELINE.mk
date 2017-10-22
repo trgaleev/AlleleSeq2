@@ -56,7 +56,8 @@ STAR_parameters_file                     := $(PL)/STAR_custom_parameters_sample_
 
 FDR_SIMS                         := 500
 FDR_CUTOFF                       := 0.05
-Cntthresh                        := 6
+Cntthresh_total                  := 6
+Cntthresh_lower                  := 0
 AMB_MODE                         := adjust # 'adjust' or allelic ratio diff threshold for filtering
 
 
@@ -107,13 +108,22 @@ $(info $(empty_string))
 all: $(PREFIX)_raw_counts_ref_allele_ratios.pdf $(PREFIX)_final_counts_ref_allele_ratios.pdf interestingHets.binom.tsv interestingHets.betabinom.tsv
 
 # this seems to work, but the way it deals with paths, filenames, etc needs to be cleaned up
-interestingHets.betabinom.tsv: $(PREFIX)_final_counts.tsv 
+interestingHets.betabinom.tsv: $(PREFIX)_final_counts_min.$(Cntthresh_total)-total.$(Cntthresh_lower)-lower.tsv 
 	Rscript $(PL)/alleledb_calcOverdispersion.R $< betabinomial
 	Rscript $(PL)/alleledb_alleleseqBetabinomial.R $< betabinomial counts.betabinom.tsv interestingHets.betabinom.tsv FDR.betabinomial.txt $(FDR_CUTOFF)
 
-interestingHets.binom.tsv: $(PREFIX)_final_counts.tsv
+interestingHets.binom.tsv: $(PREFIX)_final_counts_min.$(Cntthresh_total)-total.$(Cntthresh_lower)-lower.tsv
 	python $(PL)/FalsePos.py $< $(FDR_SIMS) $(FDR_CUTOFF) > FDR.binom.txt
 	cat $< | python $(PL)/filter_by_pval.py FDR.binom.txt > $@
+
+
+# allelic ratio distrs
+$(PREFIX)_final_counts_min.$(Cntthresh_total)-total.$(Cntthresh_lower)-lower_ref_allele_ratios.pdf: $(PREFIX)_final_counts_min.$(Cntthresh_total)-total.$(Cntthresh_lower)-lower.tsv
+	cat $< | python $(PL)/plot_AllelicRatio_distribution.py $(PREFIX)_final_counts_min.$(Cntthresh_total)-total.$(Cntthresh_lower)-lower
+
+$(PREFIX)_final_counts_min.$(Cntthresh_total)-total.$(Cntthresh_lower)-lower.tsv: $(PREFIX)_final_counts.tsv
+	cat $< | python $(PL)/filter_by_counts.py $(Cntthresh_total) $(Cntthresh_lower) > $@
+
 
 # allelic ratio distrs
 $(PREFIX)_final_counts_ref_allele_ratios.pdf: $(PREFIX)_final_counts.tsv
@@ -135,7 +145,7 @@ $(PREFIX)_raw_counts_ref_allele_ratios.pdf: $(PREFIX)_raw_counts.tsv
 
 # counts
 $(PREFIX)_raw_counts.tsv: $(PREFIX)_h1_uniqreads.mpileup $(PREFIX)_h2_uniqreads.mpileup
-	python $(PL)/pileup2counts.py $(Cntthresh) $(PGENOME_DIR)/$(VCF_SAMPLE_ID)_hetSNVs_h1.bed $(PGENOME_DIR)/$(VCF_SAMPLE_ID)_hetSNVs_h2.bed \
+	python $(PL)/pileup2counts.py 1 $(PGENOME_DIR)/$(VCF_SAMPLE_ID)_hetSNVs_h1.bed $(PGENOME_DIR)/$(VCF_SAMPLE_ID)_hetSNVs_h2.bed \
 	$(PREFIX)_discarded_HetSNVs.tsv \
 	$(PREFIX)_h1_uniqreads.mpileup $(PREFIX)_h2_uniqreads.mpileup > $@
 

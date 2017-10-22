@@ -47,7 +47,6 @@ with open(sys.argv[3],'r') as in_h2:
         hetSNV_dict[r_chr+'_'+r_crd]['a2'] = a2
         hetSNV_list.append(r_chr+'_'+r_crd)
 
-rmvdhets_file.close()
 
 
 
@@ -89,15 +88,13 @@ for k in hetSNV_list:
         'N':basecnts_h1['N'] + basecnts_h2['N']
     }
 
-    tot_cnt = basecnts[hetSNV_dict[k]['a1']]+basecnts[hetSNV_dict[k]['a2']]
+    tot_cnt = basecnts[hetSNV_dict[k]['a1']] + basecnts[hetSNV_dict[k]['a2']]
 
     if tot_cnt >= int(sys.argv[1]):
 
         ref_cnt = basecnts[hetSNV_dict[k]['r_a']]
 	if ref_cnt > tot_cnt:
-		sys.stderr.write(sys.argv[0] +' WARNING:\t' + k + ', ref allele cnt (' + str(ref_cnt) + ') is larger than ref + alt allele counts (' + str(tot_cnt) + ')\n')
-		sys.stderr.write(str(basecnts) + '\n')
-		sys.stderr.write('miscalled multi-allelic variant? Skipping this hetSNV\n')
+		rmvdhets_file.write(k.split('_')[0] + '\t' + k.split('_')[1] + '\tref_allele:' + str(ref_cnt) + '_h1:' + str(basecnts[hetSNV_dict[k]['a1']]) + '_h2:' + str(basecnts[hetSNV_dict[k]['a2']]) + '\n')
 		continue
 	#print basecnts
 	#print k +'\t' + str(ref_cnt) + '\t' + str(tot_cnt) + '\n'
@@ -122,3 +119,4 @@ for k in hetSNV_list:
             basecnts_h2['warning']
         ])+'\n')
 
+rmvdhets_file.close()
