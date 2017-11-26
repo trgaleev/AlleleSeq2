@@ -1,12 +1,8 @@
 import sys
 
-if 'FDR.binom.txt' in sys.argv[1]:
-    with open(sys.argv[1], 'r') as infdr:
-        for line in infdr:
-            if line.startswith('Target'): pth = float(line.split()[-1])
-else: # must be a number
-    pth = float(sys.argv[1])
-
+with open(sys.argv[1], 'r') as infdr:
+    for line in infdr:
+        if line.startswith('Target'): pth = float(line.split()[-1])
 
 for line in sys.stdin:
     (chr,ref_coord,h1_coord,h2_coord,ref_allele,h1_allele,h2_allele,cA,cC,cG,cT,cN,

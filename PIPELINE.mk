@@ -8,7 +8,6 @@
 PL                               := ~/bin/AlleleSeq2
 #BOWTIE1                          := ~/bin/bowtie-1.1.1/bowtie
 NTHR                             := 1 # multithread, works for mapping, sorting
-#BOWTIE1                          := /home/fas/gerstein/tg397/distr/bowtie-1.1.1/bowtie
 SAMTOOLS                         := ~/bin/samtools-1.3.1/samtools
 PICARD                           := ~/bin/picard-tools-2.1.1/picard.jar
 #JAVA                             := ~/bin/jre1.8.0_77/bin/java
@@ -19,8 +18,8 @@ STAR                             := ~/bin/STAR/bin/Linux_x86_64/STAR
 
 ### input files / paths ##
 
-READS_R1                          :=
-READS_R2                          :=
+READS_R1                         :=
+READS_R2                         :=
 
 PGENOME_DIR                      := NULL
 VCF_SAMPLE_ID                    := NULL
@@ -28,14 +27,14 @@ VCF_SAMPLE_ID                    := NULL
 
 ### mapping params ##
 
-ALIGNMENT_MODE                           := NULL # can be ASE, ASB, custom
+ALIGNMENT_MODE                           := NULL # can be 'ASE', 'ASB', 'custom'
 RM_DUPLICATE_READS                       := off  # with 'on' duplicate reads will be removed using picard
 
 # needed for all: ASE, ASB, or custom:
 GenomeIdx_STAR_diploid                   := $(PGENOME_DIR)/STAR_idx_diploid
 STAR_outFilterMismatchNoverReadLmax      := 0.03
 STAR_outFilterMatchNminOverLread         := 0.95
-STAR_readFIlesCommand                    := zcat # zcat, cat, etc
+STAR_readFilesCommand                    := zcat # zcat, cat, etc
 STAR_limitSjdbInsertNsj                  := 1500000 # star default is 1000000
 
 # needed if ASE
@@ -46,7 +45,7 @@ ifeq ($(REFGENOME_VERSION), GRCh38)
   Annotation_diploid          := $(PGENOME_DIR)/$(VCF_SAMPLE_ID)_diploid.gencode.v24.annotation.gtf
 endif
 
-STAR_sjdbOverhang                        := 100  #STAR default will work as well as the ideal (readlength -1) value according to the manual
+STAR_sjdbOverhang                        := 100  #STAR default will work almost as well as with the ideal (readlength -1) value according to the manual
 
 # if custom alignment mode
 STAR_parameters_file                     := $(PL)/STAR_custom_parameters_sample_file
@@ -56,10 +55,10 @@ STAR_parameters_file                     := $(PL)/STAR_custom_parameters_sample_
 
 FDR_SIMS                         := 500
 FDR_CUTOFF                       := 0.05
-Cntthresh_total                  := 6
-Cntthresh_lower                  := 0
+Cntthresh_tot                    := 6
+Cntthresh_min                    := 0
 AMB_MODE                         := adjust # 'adjust' or allelic ratio diff threshold for filtering
-
+KEEP_CHR                         := # empty or 'X'
 
 
 ######################
@@ -105,42 +104,47 @@ $(info $(empty_string))
 ### PIPELINE START ###
 ######################
 
-all: $(PREFIX)_raw_counts_ref_allele_ratios.pdf $(PREFIX)_final_counts_ref_allele_ratios.pdf interestingHets.binom.tsv interestingHets.betabinom.tsv
+all: $(PREFIX)_ref_allele_ratios.raw_counts.pdf $(PREFIX)_ref_allele_ratios.filtered_counts.chrs1-22$(KEEP_CHR).pdf $(PREFIX)_ref_allele_ratios.filtered_counts.chrs1-22$(KEEP_CHR).$(Cntthresh_tot)-tot_$(Cntthresh_min)-min.pdf $(PREFIX)_interestingHets.FDR-$(FDR_CUTOFF).binom.chrs1-22$(KEEP_CHR).$(Cntthresh_tot)-tot_$(Cntthresh_min)-min_cnt.tsv $(PREFIX)_interestingHets.FDR-$(FDR_CUTOFF).betabinom.chrs1-22$(KEEP_CHR).$(Cntthresh_tot)-tot_$(Cntthresh_min)-min_cnt.tsv 
 
 # this seems to work, but the way it deals with paths, filenames, etc needs to be cleaned up
-interestingHets.betabinom.tsv: $(PREFIX)_final_counts_min.$(Cntthresh_total)-total.$(Cntthresh_lower)-lower.tsv 
-	Rscript $(PL)/alleledb_calcOverdispersion.R $< betabinomial
-	Rscript $(PL)/alleledb_alleleseqBetabinomial.R $< betabinomial counts.betabinom.tsv interestingHets.betabinom.tsv FDR.betabinomial.txt $(FDR_CUTOFF)
-
-interestingHets.binom.tsv: $(PREFIX)_final_counts_min.$(Cntthresh_total)-total.$(Cntthresh_lower)-lower.tsv
-	python $(PL)/FalsePos.py $< $(FDR_SIMS) $(FDR_CUTOFF) > FDR.binom.txt
-	cat $< | python $(PL)/filter_by_pval.py FDR.binom.txt > $@
+$(PREFIX)_interestingHets.FDR-$(FDR_CUTOFF).betabinom.chrs1-22$(KEEP_CHR).$(Cntthresh_tot)-tot_$(Cntthresh_min)-min_cnt.tsv: $(PREFIX)_filtered_counts.chrs1-22$(KEEP_CHR).$(Cntthresh_tot)-tot_$(Cntthresh_min)-min_cnt.tsv
+	Rscript $(PL)/alleledb_calcOverdispersion.R $< $(PREFIX)_FDR-$(FDR_CUTOFF).betabinomial.chrs1-22$(KEEP_CHR).$(Cntthresh_tot)-tot_$(Cntthresh_min)-min
+	Rscript $(PL)/alleledb_alleleseqBetabinomial.R $< $(PREFIX)_FDR-$(FDR_CUTOFF).betabinomial.chrs1-22$(KEEP_CHR).$(Cntthresh_tot)-tot_$(Cntthresh_min)-min $(PREFIX)_counts.FDR-$(FDR_CUTOFF).betabinom.chrs1-22$(KEEP_CHR).$(Cntthresh_tot)-tot_$(Cntthresh_min)-min_cnt.tsv $@ $(PREFIX)_FDR-$(FDR_CUTOFF).betabinom.chrs1-22$(KEEP_CHR).$(Cntthresh_tot)-tot_$(Cntthresh_min)-min_cnt.txt $(FDR_CUTOFF)
 
 
-# allelic ratio distrs
-$(PREFIX)_final_counts_min.$(Cntthresh_total)-total.$(Cntthresh_lower)-lower_ref_allele_ratios.pdf: $(PREFIX)_final_counts_min.$(Cntthresh_total)-total.$(Cntthresh_lower)-lower.tsv
-	cat $< | python $(PL)/plot_AllelicRatio_distribution.py $(PREFIX)_final_counts_min.$(Cntthresh_total)-total.$(Cntthresh_lower)-lower
 
-$(PREFIX)_final_counts_min.$(Cntthresh_total)-total.$(Cntthresh_lower)-lower.tsv: $(PREFIX)_final_counts.tsv
-	cat $< | python $(PL)/filter_by_counts.py $(Cntthresh_total) $(Cntthresh_lower) > $@
+$(PREFIX)_interestingHets.FDR-$(FDR_CUTOFF).binom.chrs1-22$(KEEP_CHR).$(Cntthresh_tot)-tot_$(Cntthresh_min)-min_cnt.tsv: $(PREFIX)_filtered_counts.chrs1-22$(KEEP_CHR).$(Cntthresh_tot)-tot_$(Cntthresh_min)-min_cnt.tsv
+	python $(PL)/FalsePos.py $< $(FDR_SIMS) $(FDR_CUTOFF) > $(PREFIX)_FDR-$(FDR_CUTOFF).binom.chrs1-22$(KEEP_CHR).$(Cntthresh_tot)-tot_$(Cntthresh_min)-min_cnt.txt
+	cat $< | python $(PL)/filter_by_pval.py $(PREFIX)_FDR-$(FDR_CUTOFF).binom.chrs1-22$(KEEP_CHR).$(Cntthresh_tot)-tot_$(Cntthresh_min)-min_cnt.txt > $@
 
 
 # allelic ratio distrs
-$(PREFIX)_final_counts_ref_allele_ratios.pdf: $(PREFIX)_final_counts.tsv
-	cat $< | python $(PL)/plot_AllelicRatio_distribution.py $(PREFIX)_final_counts 
-# filter out sites in potential cnv regions and in non-autosomal chr; 
+$(PREFIX)_ref_allele_ratios.filtered_counts.chrs1-22$(KEEP_CHR).$(Cntthresh_tot)-tot_$(Cntthresh_min)-min.pdf: $(PREFIX)_filtered_counts.chrs1-22$(KEEP_CHR).$(Cntthresh_tot)-tot_$(Cntthresh_min)-min_cnt.tsv
+	cat $< | python $(PL)/plot_AllelicRatio_distribution.py $(PREFIX)_filtered_counts.chrs1-22$(KEEP_CHR).$(Cntthresh_tot)-tot_$(Cntthresh_min)-min
+
+# filter based on total counts and min per allele count
+$(PREFIX)_filtered_counts.chrs1-22$(KEEP_CHR).$(Cntthresh_tot)-tot_$(Cntthresh_min)-min_cnt.tsv: $(PREFIX)_filtered_counts.chrs1-22$(KEEP_CHR).tsv
+	cat $< | python $(PL)/filter_by_counts.py $(Cntthresh_tot) $(Cntthresh_min) > $@
+
+
+# allelic ratio distrs
+$(PREFIX)_ref_allele_ratios.filtered_counts.chrs1-22$(KEEP_CHR).pdf: $(PREFIX)_filtered_counts.chrs1-22$(KEEP_CHR).tsv
+	cat $< | python $(PL)/plot_AllelicRatio_distribution.py $(PREFIX)_filtered_counts.chrs1-22$(KEEP_CHR)
+
+# filter out sites in potential cnv regions and 
+# in non-autosomal chr; 
 # and sites with seemingly misphased/miscalled nearby variants
 # filter/adjust sites imbalanced likely due to unaccounted multi-mapping reads 
-$(PREFIX)_final_counts.tsv: $(PREFIX)_raw_counts.tsv $(PREFIX)_h1_mmapreads.mpileup $(PREFIX)_h2_mmapreads.mpileup
+$(PREFIX)_filtered_counts.chrs1-22$(KEEP_CHR).tsv: $(PREFIX)_raw_counts.tsv $(PREFIX)_h1_mmapreads.mpileup $(PREFIX)_h2_mmapreads.mpileup
 	cat $< | \
 	python $(PL)/filter_cnv_sites.py $(PREFIX)_discarded_HetSNVs.tsv $(PGENOME_DIR)/$(VCF_SAMPLE_ID)_hetSNVs_rd.tab | \
-	python $(PL)/filter_chr.py $(PREFIX)_discarded_HetSNVs.tsv | \
+	python $(PL)/filter_non-autosomal_chr.py $(PREFIX)_discarded_HetSNVs.tsv $(KEEP_CHR) | \
 	python $(PL)/filter_phase_warnings.py $(PREFIX)_discarded_HetSNVs.tsv | \
-	python $(PL)/filter_sites_w_mmaps.py $(AMB_MODE) $(PREFIX)_discarded_HetSNVs.tsv filter_sites_w_mmaps.log \
+	python $(PL)/filter_sites_w_mmaps.py $(AMB_MODE) $(PREFIX)_discarded_HetSNVs.tsv $(PREFIX)_sites_w_mmaps.log \
 		$(PREFIX)_h1_mmapreads.mpileup $(PREFIX)_h2_mmapreads.mpileup > $@
 
 # allelic ratio distrs
-$(PREFIX)_raw_counts_ref_allele_ratios.pdf: $(PREFIX)_raw_counts.tsv
+$(PREFIX)_ref_allele_ratios.raw_counts.pdf: $(PREFIX)_raw_counts.tsv
 	cat $< | python $(PL)/plot_AllelicRatio_distribution.py $(PREFIX)_raw_counts
 
 # counts
@@ -206,7 +210,7 @@ $(PREFIX)_custom-params.Aligned.sortedByCoord.out.bam: $(READS_R1)
 	--runThreadN $(NTHR) \
 	--genomeDir $(GenomeIdx_STAR_diploid) \
 	--readFilesIn $< $(READS_R2) \
-	--readFilesCommand $(STAR_readFIlesCommand) \
+	--readFilesCommand $(STAR_readFilesCommand) \
 	--outFileNamePrefix $(@:Aligned.sortedByCoord.out.bam=) \
 	--outSAMattributes All \
 	--outFilterMultimapNmax 999999 \
@@ -219,14 +223,14 @@ $(PREFIX)_custom-params.Aligned.sortedByCoord.out.bam: $(READS_R1)
 	$(SAMTOOLS) flagstat $@ > $@.stat
 	$(SAMTOOLS) index $@
 
-## optimal? params for RNA-seq; will use as default for ASE
+## params for RNA-seq; will use as default for ASE
 $(PREFIX)_ASE-params.Aligned.sortedByCoord.out.bam: $(READS_R1)
 	$(STAR) \
 	--runThreadN $(NTHR) \
 	--genomeDir $(GenomeIdx_STAR_diploid) \
 	--twopassMode Basic \
 	--readFilesIn $< $(READS_R2) \
-	--readFilesCommand $(STAR_readFIlesCommand) \
+	--readFilesCommand $(STAR_readFilesCommand) \
 	--outFileNamePrefix $(@:Aligned.sortedByCoord.out.bam=) \
 	--outSAMattributes All \
 	--outFilterMismatchNoverReadLmax $(STAR_outFilterMismatchNoverReadLmax) \
@@ -246,7 +250,7 @@ $(PREFIX)_ASB-params.Aligned.sortedByCoord.out.bam: $(READS_R1)
 	--runThreadN $(NTHR) \
 	--genomeDir $(GenomeIdx_STAR_diploid) \
 	--readFilesIn $< $(READS_R2) \
-	--readFilesCommand $(STAR_readFIlesCommand) \
+	--readFilesCommand $(STAR_readFilesCommand) \
 	--outFileNamePrefix $(@:Aligned.sortedByCoord.out.bam=) \
 	--outSAMattributes All \
 	--outFilterMismatchNoverReadLmax $(STAR_outFilterMismatchNoverReadLmax) \
@@ -275,7 +279,7 @@ $(PREFIX)_ASB-params.Aligned.sortedByCoord.out.bam: $(READS_R1)
 #	--runThreadN $(NTHR) \
 #	--genomeDir $(GenomeIdx_STAR_diploid) \
 #	--readFilesIn $< \
-#	--readFilesCommand $(STAR_readFIlesCommand) \
+#	--readFilesCommand $(STAR_readFilesCommand) \
 #	--outFileNamePrefix $(@:Aligned.sortedByCoord.out.bam=) \
 #	--outSAMattributes All \
 #	--outFilterMultimapNmax 1 \

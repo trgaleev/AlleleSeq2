@@ -7,8 +7,8 @@ from plotnine import *
 
 df = pd.read_table(sys.stdin)
 
-print df[1:5]
-print df.shape
+#print df[1:5]
+#print df.shape
 
 if len(sys.argv) > 2:
 	colmn = sys.argv[2]

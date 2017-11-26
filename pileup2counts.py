@@ -20,29 +20,28 @@ with open(sys.argv[3],'r') as in_h1:
         h_chr, _, h_crd, ref_info = line.split('\t')
         #h_cr, h = h_chr.split('_')
         r_chr, r_crd, r_a, a1, a2 = ref_info.split('_')
-        if 'h1_pos' in hetSNV_dict[r_chr+'_'+r_crd] or r_chr+'_'+r_crd in duplicate_posns:
-            duplicate_posns[r_chr+'_'+r_crd] = None
-            continue
         if a1 not in bases or a2 not in bases: 
             rmvdhets_file.write('\t'.join([r_chr, r_crd, ref_info]) + '\n')
             discarded.add(r_chr + '_' + r_crd)
+            continue
+        if 'h1_pos' in hetSNV_dict[r_chr+'_'+r_crd] or r_chr+'_'+r_crd in duplicate_posns:
+            duplicate_posns[r_chr+'_'+r_crd] = None
             continue
         hetSNV_dict[r_chr+'_'+r_crd]['h1_pos'] = h_chr + '_' + h_crd
         hetSNV_dict[r_chr+'_'+r_crd]['r_a'] = r_a
         hetSNV_dict[r_chr+'_'+r_crd]['h1_a'] = a1
         hetSNV_dict[r_chr+'_'+r_crd]['h2_a'] = a2
-
 with open(sys.argv[4],'r') as in_h2:
     for line in in_h2:
         line = line.strip()
         h_chr, _, h_crd, ref_info = line.split('\t')
         #h_cr, h = h_chr.split('_')
         r_chr, r_crd, r_a, a1, a2 = ref_info.split('_')
-        if 'h2_pos' in hetSNV_dict[r_chr+'_'+r_crd] or r_chr+'_'+r_crd in duplicate_posns:
-            duplicate_posns[r_chr+'_'+r_crd] = None
-            continue
         if a1 not in bases or a2 not in bases: 
             if r_chr + '_' + r_crd not in discarded: rmvdhets_file.write('\t'.join([r_chr, r_crd, ref_info]) + '\n')
+            continue
+        if 'h2_pos' in hetSNV_dict[r_chr+'_'+r_crd] or r_chr+'_'+r_crd in duplicate_posns:
+            duplicate_posns[r_chr+'_'+r_crd] = None
             continue
         hetSNV_dict[r_chr+'_'+r_crd]['h2_pos'] = h_chr + '_' + h_crd
         hetSNV_dict[r_chr+'_'+r_crd]['r_a'] = r_a
@@ -87,6 +86,7 @@ with open(sys.argv[2], 'r') as in_ref:
         k = line.split('\t')[0] + '_' + line.split('\t')[2]
 
         # when not lifted neither to h1 nor h2
+        # or a non A, C, G, T, N nt in vcf
         if k not in hetSNV_dict: continue
 
         basecnts_h1 = pileup_dict.get(hetSNV_dict[k].get('h1_pos',None), {'A':0, 'C':0, 'G':0, 'T':0, 'N':0, 'warning':'zero_cnt', 'h1_a':'.'})
@@ -100,7 +100,8 @@ with open(sys.argv[2], 'r') as in_ref:
             'N':basecnts_h1['N'] + basecnts_h2['N']
         }
 
-        tot_cnt = basecnts.get(basecnts_h1['h1_a'], 0) + basecnts.get(basecnts_h2['h2_a'], 0)
+        #tot_cnt = basecnts.get(basecnts_h1['h1_a'], 0) + basecnts.get(basecnts_h2['h2_a'], 0)
+        tot_cnt =  basecnts[hetSNV_dict[k]['h1_a']] +  basecnts[hetSNV_dict[k]['h2_a']]
 
         if tot_cnt >= max(int(sys.argv[1]), 1):
         # need at least one read to get at least one hap nt from mpileups
@@ -121,11 +122,11 @@ with open(sys.argv[2], 'r') as in_ref:
 
 
             ref_cnt = basecnts[hetSNV_dict[k]['r_a']]
-            if ref_cnt > tot_cnt:
+            if ref_cnt > tot_cnt:  # miscalled multi-allelic variant? 
                 rmvdhets_file.write(k.split('_')[0] + '\t' + k.split('_')[1] + '\tref_allele:' + str(ref_cnt) + '_h1:' + str(basecnts[hetSNV_dict[k]['h1_a']]) + '_h2:' + str(basecnts[hetSNV_dict[k]['h2_a']]) + '\n')
                 continue
 
-            pbinom=binom.binomtest(ref_cnt, tot_cnt, 0.5)
+            pbinom = binom.binomtest(ref_cnt, tot_cnt, 0.5)
             sys.stdout.write('\t'.join([    
                 k.split('_')[0],
                 k.split('_')[1],
