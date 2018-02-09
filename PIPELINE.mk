@@ -15,6 +15,7 @@ JAVA                             := java
 JAVA_MEM                         := 80g
 STAR                             := ~/bin/STAR/bin/Linux_x86_64/STAR
 FASTQC                           := fastqc
+CUTADAPT                         := ~/.local/bin/cutadapt
 
 ### input files / paths ##
 
@@ -27,11 +28,12 @@ VCF_SAMPLE_ID                    := NULL
 
 ### params ##
 
-ALIGNMENT_MODE                           := NULL # can be 'ASE', 'ASB', 'custom'
+ALIGNMENT_MODE                           := NULL # can be 'ASE', 'ASB', 'custom', 'ASCA' -- currently, for atac-seq only and with known adapters 
+#todo: for ASCA, single-end compatibility, adapter detection step, dnase-seq
 RM_DUPLICATE_READS                       := off  # with 'on' duplicate reads will be removed using picard
 PERFORM_FASTQC                           := on
 
-# needed for all: ASE, ASB, or custom:
+# needed for all: ASE, ASB, custom, or ASCA:
 GenomeIdx_STAR_diploid                   := $(PGENOME_DIR)/STAR_idx_diploid
 STAR_outFilterMismatchNoverReadLmax      := 0.03
 STAR_outFilterMatchNminOverLread         := 0.95
@@ -51,6 +53,12 @@ STAR_sjdbOverhang                        := 100  #STAR default will work almost 
 # if custom alignment mode
 STAR_parameters_file                     := $(PL)/STAR_custom_parameters_sample_file
 
+# needed if ASCA, atac-seq:
+R1_ADAPTER_SEQ                           := CTGTCTCTTATA
+R2_ADAPTER_SEQ                           := CTGTCTCTTATA
+# for ASCA, Nextera and transposase adapter sequences trimming, similar to ENCODE prototype peak calling pipeline finds in ENTEx samples
+# and discussion in https://www.biostars.org/p/215988/
+# #todo: incorporate more general adapter detection step
 
 # stats / counts params:
 
@@ -72,7 +80,6 @@ ifeq ($(READS_R2),$(empty_string))
   tmp2 = $(tmp1:.fastq=)
   PREFIX = $(tmp2:.fq=)
   FASTQC_out = $(PREFIX)_fastqc.html
-  FASTQC_command = $(FASTQC) --threads $(NTHR) $(READS_R1)
 else
   tmp11 = $(READS_R1:.gz=)
   tmp12 = $(tmp11:.fastq=)
@@ -80,7 +87,6 @@ else
   tmp21 = $(READS_R2:.gz=)
   tmp22 = $(tmp21:.fastq=)
   PREFIX = $(tmp12:.fq=)_$(tmp22:.fq=)
-  FASTQC_command = $(FASTQC) --threads $(NTHR) $(READS_R2); $(FASTQC) --threads $(NTHR) $(READS_R1)
 endif
 
 ifeq ($(RM_DUPLICATE_READS),on)
@@ -116,7 +122,10 @@ $(info $(empty_string))
 ### PIPELINE START ###
 ######################
 
-all: $(FASTQC_out) $(PREFIX)_ref_allele_ratios.raw_counts.pdf $(PREFIX)_ref_allele_ratios.filtered_counts.chrs1-22$(KEEP_CHR).pdf $(PREFIX)_ref_allele_ratios.filtered_counts.chrs1-22$(KEEP_CHR).$(Cntthresh_tot)-tot_$(Cntthresh_min)-min.pdf $(PREFIX)_interestingHets.FDR-$(FDR_CUTOFF).binom.chrs1-22$(KEEP_CHR).$(Cntthresh_tot)-tot_$(Cntthresh_min)-min_cnt.tsv $(PREFIX)_interestingHets.FDR-$(FDR_CUTOFF).betabinom.chrs1-22$(KEEP_CHR).$(Cntthresh_tot)-tot_$(Cntthresh_min)-min_cnt.tsv 
+all: $(FASTQC_out) $(PREFIX)_ref_allele_ratios.raw_counts.pdf $(PREFIX)_ref_allele_ratios.filtered_counts.chrs1-22$(KEEP_CHR).pdf $(PREFIX)_ref_allele_ratios.filtered_counts.chrs1-22$(KEEP_CHR).$(Cntthresh_tot)-tot_$(Cntthresh_min)-min.pdf $(PREFIX)_interestingHets.FDR-$(FDR_CUTOFF).betabinom.chrs1-22$(KEEP_CHR).$(Cntthresh_tot)-tot_$(Cntthresh_min)-min_cnt.tsv 
+
+#all: $(FASTQC_out) $(PREFIX)_ref_allele_ratios.raw_counts.pdf $(PREFIX)_ref_allele_ratios.filtered_counts.chrs1-22$(KEEP_CHR).pdf $(PREFIX)_ref_allele_ratios.filtered_counts.chrs1-22$(KEEP_CHR).$(Cntthresh_tot)-tot_$(Cntthresh_min)-min.pdf $(PREFIX)_interestingHets.FDR-$(FDR_CUTOFF).binom.chrs1-22$(KEEP_CHR).$(Cntthresh_tot)-tot_$(Cntthresh_min)-min_cnt.tsv $(PREFIX)_interestingHets.FDR-$(FDR_CUTOFF).betabinom.chrs1-22$(KEEP_CHR).$(Cntthresh_tot)-tot_$(Cntthresh_min)-min_cnt.tsv 
+
 
 # this seems to work, but the way it deals with paths, filenames, etc needs to be cleaned up
 $(PREFIX)_interestingHets.FDR-$(FDR_CUTOFF).betabinom.chrs1-22$(KEEP_CHR).$(Cntthresh_tot)-tot_$(Cntthresh_min)-min_cnt.tsv: $(PREFIX)_filtered_counts.chrs1-22$(KEEP_CHR).$(Cntthresh_tot)-tot_$(Cntthresh_min)-min_cnt.tsv
@@ -277,8 +286,39 @@ $(PREFIX)_ASB-params.Aligned.sortedByCoord.out.bam: $(READS_R1)
 	$(SAMTOOLS) index $@	
 
 
+## opts for ASCA, atac-seq, similar to ASB, but will require adapter-trimmed reads
+$(PREFIX)_ASCA-params.Aligned.sortedByCoord.out.bam: $(READS_R1).trimmed.fastq.gz
+	$(STAR) \
+	--runThreadN $(NTHR) \
+	--genomeDir $(GenomeIdx_STAR_diploid) \
+	--readFilesIn $< $(READS_R2).trimmed.fastq.gz \
+	--readFilesCommand $(STAR_readFilesCommand) \
+	--outFileNamePrefix $(@:Aligned.sortedByCoord.out.bam=) \
+	--outSAMattributes All \
+	--outFilterMismatchNoverReadLmax $(STAR_outFilterMismatchNoverReadLmax) \
+	--outFilterMatchNminOverLread $(STAR_outFilterMatchNminOverLread) \
+	--outFilterMultimapNmax 999999 \
+	--scoreGap -100 \
+	--scoreGenomicLengthLog2scale 0.0 \
+	--sjdbScore 0 \
+	--limitSjdbInsertNsj $(STAR_limitSjdbInsertNsj) \
+	--outSAMtype BAM SortedByCoordinate
+	$(SAMTOOLS) flagstat $@ > $@.stat
+	$(SAMTOOLS) index $@	
+
+$(READS_R1).trimmed.fastq.gz $(READS_R2).trimmed.fastq.gz: $(READS_R1) $(READS_R2)
+	$(CUTADAPT) -m 5 \
+	-a $(R1_ADAPTER_SEQ) \
+	-A $(R2_ADAPTER_SEQ) \
+	-o $(READS_R1).trimmed.fastq.gz \
+	-p $(READS_R2).trimmed.fastq.gz \
+	$(READS_R1) $(READS_R2)
+	$(FASTQC) --threads $(NTHR) $(READS_R1).trimmed.fastq.gz $(READS_R2).trimmed.fastq.gz
+# #todo: check if cutadapt will work with multiple $(NTHR) with python3
+
+
 $(FASTQC_out): $(READS_R1)
-	$(FASTQC_command)
+	$(FASTQC) --threads $(NTHR) $(READS_R1) $(READS_R2)
 
 
 # * --outFilterMultimapScoreRange default =1 works fine for making sure read mapping to the right allele with one hetSNV gets a higher score
