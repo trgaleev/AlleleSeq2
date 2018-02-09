@@ -14,7 +14,7 @@ PICARD                           := ~/bin/picard-tools-2.1.1/picard.jar
 JAVA                             := java
 JAVA_MEM                         := 80g
 STAR                             := ~/bin/STAR/bin/Linux_x86_64/STAR
-
+FASTQC                           := fastqc
 
 ### input files / paths ##
 
@@ -25,10 +25,11 @@ PGENOME_DIR                      := NULL
 VCF_SAMPLE_ID                    := NULL
 
 
-### mapping params ##
+### params ##
 
 ALIGNMENT_MODE                           := NULL # can be 'ASE', 'ASB', 'custom'
 RM_DUPLICATE_READS                       := off  # with 'on' duplicate reads will be removed using picard
+PERFORM_FASTQC                           := on
 
 # needed for all: ASE, ASB, or custom:
 GenomeIdx_STAR_diploid                   := $(PGENOME_DIR)/STAR_idx_diploid
@@ -70,18 +71,25 @@ ifeq ($(READS_R2),$(empty_string))
   tmp1 = $(READS_R1:.gz=)
   tmp2 = $(tmp1:.fastq=)
   PREFIX = $(tmp2:.fq=)
+  FASTQC_out = $(PREFIX)_fastqc.html
+  FASTQC_command = $(FASTQC) --threads $(NTHR) $(READS_R1)
 else
   tmp11 = $(READS_R1:.gz=)
   tmp12 = $(tmp11:.fastq=)
+  FASTQC_out = $(tmp12:.fq=)_fastqc.html
   tmp21 = $(READS_R2:.gz=)
   tmp22 = $(tmp21:.fastq=)
   PREFIX = $(tmp12:.fq=)_$(tmp22:.fq=)
+  FASTQC_command = $(FASTQC) --threads $(NTHR) $(READS_R2); $(FASTQC) --threads $(NTHR) $(READS_R1)
 endif
 
 ifeq ($(RM_DUPLICATE_READS),on)
   DEDUP_SUFFIX = rmdup.
 endif
 
+ifeq ($(PERFORM_FASTQC),off)
+  FASTQC_out = $(empty_string)
+endif
 
 FINAL_ALIGNMENT_FILENAME = $(PREFIX)_$(ALIGNMENT_MODE)-params.Aligned.sortedByCoord.out.$(DEDUP_SUFFIX)bam
 HetSNV_UNIQALNS_FILENAME = $(PREFIX)_$(ALIGNMENT_MODE)-params_crdsorted_uniqreads_over_hetSNVs.bam
@@ -90,12 +98,16 @@ HetSNV_MMAPALNS_FILENAME = $(PREFIX)_$(ALIGNMENT_MODE)-params_crdsorted_mmapread
 $(info PGENOME_DIR: $(PGENOME_DIR))
 $(info READS_R1: $(READS_R1))
 $(info READS_R2: $(READS_R2))
+$(info PERFORM_FASTQC: $(PERFORM_FASTQC))
 $(info PREFIX: $(PREFIX))
 $(info ALIGNMENT_MODE: $(ALIGNMENT_MODE))
 $(info RM_DUPLICATE_READS: $(RM_DUPLICATE_READS))
 $(info FINAL_ALIGNMENT_FILENAME: $(FINAL_ALIGNMENT_FILENAME))
 $(info HetSNV_UNIQALNS_FILENAME: $(HetSNV_UNIQALNS_FILENAME))
 $(info HetSNV_MMAPALNS_FILENAME: $(HetSNV_MMAPALNS_FILENAME))
+$(info $(empty_string))
+$(info $(empty_string))
+$(info $(empty_string))
 $(info $(empty_string))
 
 
@@ -104,7 +116,7 @@ $(info $(empty_string))
 ### PIPELINE START ###
 ######################
 
-all: $(PREFIX)_ref_allele_ratios.raw_counts.pdf $(PREFIX)_ref_allele_ratios.filtered_counts.chrs1-22$(KEEP_CHR).pdf $(PREFIX)_ref_allele_ratios.filtered_counts.chrs1-22$(KEEP_CHR).$(Cntthresh_tot)-tot_$(Cntthresh_min)-min.pdf $(PREFIX)_interestingHets.FDR-$(FDR_CUTOFF).binom.chrs1-22$(KEEP_CHR).$(Cntthresh_tot)-tot_$(Cntthresh_min)-min_cnt.tsv $(PREFIX)_interestingHets.FDR-$(FDR_CUTOFF).betabinom.chrs1-22$(KEEP_CHR).$(Cntthresh_tot)-tot_$(Cntthresh_min)-min_cnt.tsv 
+all: $(FASTQC_out) $(PREFIX)_ref_allele_ratios.raw_counts.pdf $(PREFIX)_ref_allele_ratios.filtered_counts.chrs1-22$(KEEP_CHR).pdf $(PREFIX)_ref_allele_ratios.filtered_counts.chrs1-22$(KEEP_CHR).$(Cntthresh_tot)-tot_$(Cntthresh_min)-min.pdf $(PREFIX)_interestingHets.FDR-$(FDR_CUTOFF).binom.chrs1-22$(KEEP_CHR).$(Cntthresh_tot)-tot_$(Cntthresh_min)-min_cnt.tsv $(PREFIX)_interestingHets.FDR-$(FDR_CUTOFF).betabinom.chrs1-22$(KEEP_CHR).$(Cntthresh_tot)-tot_$(Cntthresh_min)-min_cnt.tsv 
 
 # this seems to work, but the way it deals with paths, filenames, etc needs to be cleaned up
 $(PREFIX)_interestingHets.FDR-$(FDR_CUTOFF).betabinom.chrs1-22$(KEEP_CHR).$(Cntthresh_tot)-tot_$(Cntthresh_min)-min_cnt.tsv: $(PREFIX)_filtered_counts.chrs1-22$(KEEP_CHR).$(Cntthresh_tot)-tot_$(Cntthresh_min)-min_cnt.tsv
@@ -264,6 +276,9 @@ $(PREFIX)_ASB-params.Aligned.sortedByCoord.out.bam: $(READS_R1)
 	$(SAMTOOLS) flagstat $@ > $@.stat
 	$(SAMTOOLS) index $@	
 
+
+$(FASTQC_out): $(READS_R1)
+	$(FASTQC_command)
 
 
 # * --outFilterMultimapScoreRange default =1 works fine for making sure read mapping to the right allele with one hetSNV gets a higher score
