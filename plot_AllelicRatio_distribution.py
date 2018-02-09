@@ -12,11 +12,14 @@ df = pd.read_table(sys.stdin)
 
 if len(sys.argv) > 2:
 	colmn = sys.argv[2]
-else: colmn = "ref_allele_ratio"
+	label = ' '.join(sys.argv[2].split('_'))
+else: 
+	colmn = "ref_allele_ratio"
+	label = "reference allele ratio"
 
 p0 = ggplot(df, aes(colmn)) + \
 	geom_histogram(bins=41) + \
-	xlab("reference allele ratio")+ \
+	xlab(label) + \
 	ggtitle(sys.argv[1].replace('_',' '))
 
 ggsave(p0, sys.argv[1]+"_"+colmn+"s.pdf", width=5, height=5)
