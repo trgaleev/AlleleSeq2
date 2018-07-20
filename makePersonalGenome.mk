@@ -78,11 +78,11 @@ else ifeq ($(ALIGNER),STAR)
   PGENOME_IDX_TARGET = $(OUTPUT_DIR)/STAR_idx_diploid_Log.out
 else ifeq ($(ALIGNER)$(ADDNL_SEQNS),bowtie2$(empty_string))
   PGENOME_IDX_TARGET = $(OUTPUT_DIR)/bowtie2_build_diploid.log
-  BOWTIE2_SEQ_IN = $(OUTPUT_DIR)/$(VCF_SAMPLE_ID)_h1.fa,$(OUTPUT_DIR)/$(VCF_SAMPLE_ID)_h2.fa 
+  BOWTIE2_SEQ_IN = $(OUTPUT_DIR)/$(VCF_SAMPLE_ID)_hap1.fa,$(OUTPUT_DIR)/$(VCF_SAMPLE_ID)_hap2.fa 
   $(info BOWTIE2_SEQ_IN: $(BOWTIE2_SEQ_IN))
 else ifeq ($(ALIGNER),bowtie2)
   PGENOME_IDX_TARGET = $(OUTPUT_DIR)/bowtie2_build_diploid.log
-  BOWTIE2_SEQ_IN = $(OUTPUT_DIR)/$(VCF_SAMPLE_ID)_h1.fa,$(OUTPUT_DIR)/$(VCF_SAMPLE_ID)_h2.fa,$(ADDNL_SEQNS)
+  BOWTIE2_SEQ_IN = $(OUTPUT_DIR)/$(VCF_SAMPLE_ID)_hap1.fa,$(OUTPUT_DIR)/$(VCF_SAMPLE_ID)_hap2.fa,$(ADDNL_SEQNS)
   $(info BOWTIE2_SEQ_IN: $(BOWTIE2_SEQ_IN))
 endif
 
@@ -101,7 +101,7 @@ $(info PGENOME_IDX_TARGET: $(PGENOME_IDX_TARGET))
 
 #### pipeline start ######
 
-all: $(OUTPUT_DIR)/$(VCF_SAMPLE_ID)_hetSNVs_h1.bed $(OUTPUT_DIR)/$(VCF_SAMPLE_ID)_hetSNVs_h2.bed $(OUTPUT_DIR)/$(VCF_SAMPLE_ID)_hetSNVs_rd.tab $(PGENOME_IDX_TARGET) 
+all: $(OUTPUT_DIR)/$(VCF_SAMPLE_ID)_hetSNVs_hap1.bed $(OUTPUT_DIR)/$(VCF_SAMPLE_ID)_hetSNVs_hap2.bed $(OUTPUT_DIR)/$(VCF_SAMPLE_ID)_hetSNVs_rd.tab $(PGENOME_IDX_TARGET) 
 
 
 # vcf2diploid
@@ -120,38 +120,38 @@ $(OUTPUT_DIR)/maternal.chain $(OUTPUT_DIR)/paternal.chain: $(FILE_PATH_VCF)
 
 # prepare .bed files w all hetSNVs in both coord systems
 # if chr name convention is different in .vcf and $(REFGENOME) use the one from $(REFGENOME) 
-# also make it more general: substitute 'paternal' with 'h1' and 'maternal' with 'h2' to match GT, h1|h2, in the vcf
+# also make it more general: substitute 'paternal' with 'hap1' and 'maternal' with 'hap2' to match GT, hap1|hap2, in the vcf
 
 $(OUTPUT_DIR)/$(VCF_SAMPLE_ID)_hetSNVs_ref.bed: $(FILE_PATH_VCF) $(OUTPUT_DIR)/maternal.chain $(OUTPUT_DIR)/paternal.chain
 	cat $(FILE_PATH_VCF) | python $(PL)/get_hetSNV_bed.py $(VCF_SAMPLE_ID) $(REFGENOME) > $@
 
-$(OUTPUT_DIR)/$(VCF_SAMPLE_ID)_hetSNVs_h2.bed: $(OUTPUT_DIR)/$(VCF_SAMPLE_ID)_hetSNVs_ref.bed $(OUTPUT_DIR)/maternal.chain
-	sed 's/maternal/h2/g' $(OUTPUT_DIR)/maternal.chain | $(LIFTOVER) $< stdin $@ $(subst .bed,,$@).not_lifted.bed
+$(OUTPUT_DIR)/$(VCF_SAMPLE_ID)_hetSNVs_hap2.bed: $(OUTPUT_DIR)/$(VCF_SAMPLE_ID)_hetSNVs_ref.bed $(OUTPUT_DIR)/maternal.chain
+	sed 's/maternal/hap2/g' $(OUTPUT_DIR)/maternal.chain | $(LIFTOVER) $< stdin $@ $(subst .bed,,$@).not_lifted.bed
 
-$(OUTPUT_DIR)/$(VCF_SAMPLE_ID)_hetSNVs_h1.bed: $(OUTPUT_DIR)/$(VCF_SAMPLE_ID)_hetSNVs_ref.bed $(OUTPUT_DIR)/paternal.chain
-	sed 's/paternal/h1/g' $(OUTPUT_DIR)/paternal.chain | $(LIFTOVER) $< stdin $@ $(subst .bed,,$@).not_lifted.bed
+$(OUTPUT_DIR)/$(VCF_SAMPLE_ID)_hetSNVs_hap1.bed: $(OUTPUT_DIR)/$(VCF_SAMPLE_ID)_hetSNVs_ref.bed $(OUTPUT_DIR)/paternal.chain
+	sed 's/paternal/hap1/g' $(OUTPUT_DIR)/paternal.chain | $(LIFTOVER) $< stdin $@ $(subst .bed,,$@).not_lifted.bed
 
 
 
-#$(OUTPUT_DIR)/$(VCF_SAMPLE_ID)_h2.fa: $(OUTPUT_DIR)/maternal.chain $(OUTPUT_DIR)/$(VCF_SAMPLE_ID)_hetSNVs_ref.bed
+#$(OUTPUT_DIR)/$(VCF_SAMPLE_ID)_hap2.fa: $(OUTPUT_DIR)/maternal.chain $(OUTPUT_DIR)/$(VCF_SAMPLE_ID)_hetSNVs_ref.bed
 #	cat $(shell awk  '{print $$1"_maternal.fa"}' $(OUTPUT_DIR)/$(VCF_SAMPLE_ID)_hetSNVs_ref.bed | uniq) | \
-#	sed 's/maternal/h2/g' > $@
+#	sed 's/maternal/hap2/g' > $@
 
-#$(OUTPUT_DIR)/$(VCF_SAMPLE_ID)_h1.fa: $(OUTPUT_DIR)/paternal.chain $(OUTPUT_DIR)/$(VCF_SAMPLE_ID)_hetSNVs_ref.bed
+#$(OUTPUT_DIR)/$(VCF_SAMPLE_ID)_hap1.fa: $(OUTPUT_DIR)/paternal.chain $(OUTPUT_DIR)/$(VCF_SAMPLE_ID)_hetSNVs_ref.bed
 #	cat $(shell awk  '{print $$1"_paternal.fa"}' $(OUTPUT_DIR)/$(VCF_SAMPLE_ID)_hetSNVs_ref.bed | uniq) | \
-#	sed 's/paternal/h1/g' > $@
+#	sed 's/paternal/hap1/g' > $@
 	
 
-$(OUTPUT_DIR)/$(VCF_SAMPLE_ID)_h2.fa: $(OUTPUT_DIR)/maternal.chain $(OUTPUT_DIR)/$(VCF_SAMPLE_ID)_hetSNVs_ref.bed
+$(OUTPUT_DIR)/$(VCF_SAMPLE_ID)_hap2.fa: $(OUTPUT_DIR)/maternal.chain $(OUTPUT_DIR)/$(VCF_SAMPLE_ID)_hetSNVs_ref.bed
 	cat $(shell ls $(OUTPUT_DIR)/*[0-9]_$(VCF_SAMPLE_ID)_maternal.fa | sort -V)  \
 	    $(shell ls $(OUTPUT_DIR)/*[$(ALLOSOMES_M)]_$(VCF_SAMPLE_ID)_maternal.fa)  \
 	    $(shell ls $(OUTPUT_DIR)/*[M,MT]_$(VCF_SAMPLE_ID)_maternal.fa) | \
-	sed 's/maternal/h2/g' > $@
+	sed 's/maternal/hap2/g' > $@
 
-$(OUTPUT_DIR)/$(VCF_SAMPLE_ID)_h1.fa: $(OUTPUT_DIR)/paternal.chain $(OUTPUT_DIR)/$(VCF_SAMPLE_ID)_hetSNVs_ref.bed
+$(OUTPUT_DIR)/$(VCF_SAMPLE_ID)_hap1.fa: $(OUTPUT_DIR)/paternal.chain $(OUTPUT_DIR)/$(VCF_SAMPLE_ID)_hetSNVs_ref.bed
 	cat $(shell ls $(OUTPUT_DIR)/*[0-9]_$(VCF_SAMPLE_ID)_paternal.fa | sort -V)  \
 	    $(shell ls $(OUTPUT_DIR)/*[$(ALLOSOMES_P)]_$(VCF_SAMPLE_ID)_paternal.fa) | \
-	sed 's/paternal/h1/g' > $@
+	sed 's/paternal/hap1/g' > $@
 
 # if star
 # will generate lifted annotation files, but will not use them when generating STAR genome indices, since
@@ -164,19 +164,19 @@ $(OUTPUT_DIR)/paternal.$(notdir $(ANNOTATION)): $(OUTPUT_DIR)/paternal.chain
 	cat $(ANNOTATION) | $(LIFTOVER) -gff stdin $< $@ $(OUTPUT_DIR)/paternal.notLifted
 
 $(OUTPUT_DIR)/$(VCF_SAMPLE_ID)_diploid.$(notdir $(ANNOTATION)): $(OUTPUT_DIR)/maternal.$(notdir $(ANNOTATION)) $(OUTPUT_DIR)/paternal.$(notdir $(ANNOTATION))
-	cat $(OUTPUT_DIR)/maternal.$(notdir $(ANNOTATION)) $(OUTPUT_DIR)/paternal.$(notdir $(ANNOTATION)) | sed 's/maternal/h2/g' | sed 's/paternal/h1/g'  > $@
+	cat $(OUTPUT_DIR)/maternal.$(notdir $(ANNOTATION)) $(OUTPUT_DIR)/paternal.$(notdir $(ANNOTATION)) | sed 's/maternal/hap2/g' | sed 's/paternal/hap1/g'  > $@
 
 
 # star idx
 
-$(OUTPUT_DIR)/STAR_idx_diploid_Log.out: $(OUTPUT_DIR)/$(VCF_SAMPLE_ID)_diploid.$(notdir $(ANNOTATION)) $(OUTPUT_DIR)/$(VCF_SAMPLE_ID)_h2.fa $(OUTPUT_DIR)/$(VCF_SAMPLE_ID)_h1.fa
+$(OUTPUT_DIR)/STAR_idx_diploid_Log.out: $(OUTPUT_DIR)/$(VCF_SAMPLE_ID)_diploid.$(notdir $(ANNOTATION)) $(OUTPUT_DIR)/$(VCF_SAMPLE_ID)_hap2.fa $(OUTPUT_DIR)/$(VCF_SAMPLE_ID)_hap1.fa
 	mkdir -p $(OUTPUT_DIR)/STAR_idx_diploid
 	$(STAR) \
 		--runThreadN $(N_THREADS) \
 		--limitGenomeGenerateRAM $(STAR_limitGenomeGenerateRAM) \
 		--runMode genomeGenerate \
 		--genomeDir $(OUTPUT_DIR)/STAR_idx_diploid \
-		--genomeFastaFiles $(OUTPUT_DIR)/$(VCF_SAMPLE_ID)_h1.fa $(OUTPUT_DIR)/$(VCF_SAMPLE_ID)_h2.fa $(ADDNL_SEQNS) \
+		--genomeFastaFiles $(OUTPUT_DIR)/$(VCF_SAMPLE_ID)_hap1.fa $(OUTPUT_DIR)/$(VCF_SAMPLE_ID)_hap2.fa $(ADDNL_SEQNS) \
 		--outFileNamePrefix $(OUTPUT_DIR)/STAR_idx_diploid_
 
 
@@ -231,11 +231,11 @@ $(OUTPUT_DIR)/$(VCF_SAMPLE_ID)_hetSNVs_rd.tab: $(OUTPUT_DIR)/$(VCF_SAMPLE_ID)_he
 		-g $(OUTPUT_DIR)/genome.txt -sorted -wb -bed | python $(PL)/calculate_rd.py > $@
 
 
-#$(OUTPUT_DIR)/bowtie_build_diploid.log: $(OUTPUT_DIR)/$(VCF_SAMPLE_ID)_h2.fa $(OUTPUT_DIR)/$(VCF_SAMPLE_ID)_h1.fa 
+#$(OUTPUT_DIR)/bowtie_build_diploid.log: $(OUTPUT_DIR)/$(VCF_SAMPLE_ID)_hap2.fa $(OUTPUT_DIR)/$(VCF_SAMPLE_ID)_hap1.fa 
 #	$(BOWTIE_build) --offrate 2 \
-#		$(OUTPUT_DIR)/$(VCF_SAMPLE_ID)_h2.fa,$(OUTPUT_DIR)/$(VCF_SAMPLE_ID)_h1.fa $(OUTPUT_DIR)/$(VCF_SAMPLE_ID)_diploid > $@
+#		$(OUTPUT_DIR)/$(VCF_SAMPLE_ID)_hap2.fa,$(OUTPUT_DIR)/$(VCF_SAMPLE_ID)_hap1.fa $(OUTPUT_DIR)/$(VCF_SAMPLE_ID)_diploid > $@
 
 
 
-$(OUTPUT_DIR)/bowtie2_build_diploid.log: $(OUTPUT_DIR)/$(VCF_SAMPLE_ID)_h1.fa $(OUTPUT_DIR)/$(VCF_SAMPLE_ID)_h2.fa 
+$(OUTPUT_DIR)/bowtie2_build_diploid.log: $(OUTPUT_DIR)/$(VCF_SAMPLE_ID)_hap1.fa $(OUTPUT_DIR)/$(VCF_SAMPLE_ID)_hap2.fa 
 	$(BOWTIE2_build) --threads $(N_THREADS) $(BOWTIE2_SEQ_IN) $(OUTPUT_DIR)/$(VCF_SAMPLE_ID)_diploid > $@

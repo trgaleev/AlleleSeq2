@@ -156,42 +156,42 @@ $(PREFIX)_ref_allele_ratios.filtered_counts.chrs1-22$(KEEP_CHR).pdf: $(PREFIX)_f
 # in non-autosomal chr; 
 # and sites with seemingly misphased/miscalled nearby variants
 # filter/adjust sites imbalanced likely due to unaccounted multi-mapping reads 
-$(PREFIX)_filtered_counts.chrs1-22$(KEEP_CHR).tsv: $(PREFIX)_raw_counts.tsv $(PREFIX)_h1_mmapreads.mpileup $(PREFIX)_h2_mmapreads.mpileup
+$(PREFIX)_filtered_counts.chrs1-22$(KEEP_CHR).tsv: $(PREFIX)_raw_counts.tsv $(PREFIX)_hap1_mmapreads.mpileup $(PREFIX)_hap2_mmapreads.mpileup
 	cat $< | \
 	python $(PL)/filter_cnv_sites.py $(PREFIX)_discarded_HetSNVs.tsv $(PGENOME_DIR)/$(VCF_SAMPLE_ID)_hetSNVs_rd.tab | \
 	python $(PL)/filter_non-autosomal_chr.py $(PREFIX)_discarded_HetSNVs.tsv $(KEEP_CHR) | \
 	python $(PL)/filter_phase_warnings.py $(PREFIX)_discarded_HetSNVs.tsv | \
 	python $(PL)/filter_sites_w_mmaps.py $(AMB_MODE) $(PREFIX)_discarded_HetSNVs.tsv $(PREFIX)_sites_w_mmaps.log \
-		$(PREFIX)_h1_mmapreads.mpileup $(PREFIX)_h2_mmapreads.mpileup > $@
+		$(PREFIX)_hap1_mmapreads.mpileup $(PREFIX)_hap2_mmapreads.mpileup > $@
 
 # allelic ratio distrs
 $(PREFIX)_ref_allele_ratios.raw_counts.pdf: $(PREFIX)_raw_counts.tsv
 	cat $< | python $(PL)/plot_AllelicRatio_distribution.py $(PREFIX)_raw_counts
 
 # counts
-$(PREFIX)_raw_counts.tsv: $(PREFIX)_h1_uniqreads.mpileup $(PREFIX)_h2_uniqreads.mpileup
+$(PREFIX)_raw_counts.tsv: $(PREFIX)_hap1_uniqreads.mpileup $(PREFIX)_hap2_uniqreads.mpileup
 	python $(PL)/pileup2counts.py 1 $(PGENOME_DIR)/$(VCF_SAMPLE_ID)_hetSNVs_ref.bed \
-	$(PGENOME_DIR)/$(VCF_SAMPLE_ID)_hetSNVs_h1.bed $(PGENOME_DIR)/$(VCF_SAMPLE_ID)_hetSNVs_h2.bed \
+	$(PGENOME_DIR)/$(VCF_SAMPLE_ID)_hetSNVs_hap1.bed $(PGENOME_DIR)/$(VCF_SAMPLE_ID)_hetSNVs_hap2.bed \
 	$(PREFIX)_discarded_HetSNVs.tsv \
-	$(PREFIX)_h1_uniqreads.mpileup $(PREFIX)_h2_uniqreads.mpileup > $@
+	$(PREFIX)_hap1_uniqreads.mpileup $(PREFIX)_hap2_uniqreads.mpileup > $@
 
 
 # pileups
-$(PREFIX)_h1_mmapreads.mpileup: $(HetSNV_MMAPALNS_FILENAME)
-	$(SAMTOOLS) mpileup -BQ0 --max-depth 999999 --ff UNMAP -f $(PGENOME_DIR)/$(VCF_SAMPLE_ID)_h1.fa $< \
-	--positions $(PGENOME_DIR)/$(VCF_SAMPLE_ID)_hetSNVs_h1.bed --output $@
+$(PREFIX)_hap1_mmapreads.mpileup: $(HetSNV_MMAPALNS_FILENAME)
+	$(SAMTOOLS) mpileup -BQ0 --max-depth 999999 --ff UNMAP -f $(PGENOME_DIR)/$(VCF_SAMPLE_ID)_hap1.fa $< \
+	--positions $(PGENOME_DIR)/$(VCF_SAMPLE_ID)_hetSNVs_hap1.bed --output $@
 
-$(PREFIX)_h2_mmapreads.mpileup: $(HetSNV_MMAPALNS_FILENAME)
-	$(SAMTOOLS) mpileup -BQ0 --max-depth 999999 --ff UNMAP -f $(PGENOME_DIR)/$(VCF_SAMPLE_ID)_h2.fa $< \
-	--positions $(PGENOME_DIR)/$(VCF_SAMPLE_ID)_hetSNVs_h2.bed --output $@
+$(PREFIX)_hap2_mmapreads.mpileup: $(HetSNV_MMAPALNS_FILENAME)
+	$(SAMTOOLS) mpileup -BQ0 --max-depth 999999 --ff UNMAP -f $(PGENOME_DIR)/$(VCF_SAMPLE_ID)_hap2.fa $< \
+	--positions $(PGENOME_DIR)/$(VCF_SAMPLE_ID)_hetSNVs_hap2.bed --output $@
 
-$(PREFIX)_h1_uniqreads.mpileup: $(HetSNV_UNIQALNS_FILENAME)
-	$(SAMTOOLS) mpileup -BQ0 --max-depth 999999 --ff UNMAP -f $(PGENOME_DIR)/$(VCF_SAMPLE_ID)_h1.fa $< \
-	--positions $(PGENOME_DIR)/$(VCF_SAMPLE_ID)_hetSNVs_h1.bed --output $@
+$(PREFIX)_hap1_uniqreads.mpileup: $(HetSNV_UNIQALNS_FILENAME)
+	$(SAMTOOLS) mpileup -BQ0 --max-depth 999999 --ff UNMAP -f $(PGENOME_DIR)/$(VCF_SAMPLE_ID)_hap1.fa $< \
+	--positions $(PGENOME_DIR)/$(VCF_SAMPLE_ID)_hetSNVs_hap1.bed --output $@
 
-$(PREFIX)_h2_uniqreads.mpileup: $(HetSNV_UNIQALNS_FILENAME)
-	$(SAMTOOLS) mpileup -BQ0 --max-depth 999999 --ff UNMAP -f $(PGENOME_DIR)/$(VCF_SAMPLE_ID)_h2.fa $< \
-	--positions $(PGENOME_DIR)/$(VCF_SAMPLE_ID)_hetSNVs_h2.bed --output $@
+$(PREFIX)_hap2_uniqreads.mpileup: $(HetSNV_UNIQALNS_FILENAME)
+	$(SAMTOOLS) mpileup -BQ0 --max-depth 999999 --ff UNMAP -f $(PGENOME_DIR)/$(VCF_SAMPLE_ID)_hap2.fa $< \
+	--positions $(PGENOME_DIR)/$(VCF_SAMPLE_ID)_hetSNVs_hap2.bed --output $@
 
 # by default --ff was also filtering-out some other - secondary? reads:  [UNMAP,SECONDARY,QCFAIL,DUP], leaving only UNMAP for now
 
@@ -200,7 +200,7 @@ $(PREFIX)_h2_uniqreads.mpileup: $(HetSNV_UNIQALNS_FILENAME)
 
 # non-uniq alns over hetSNVs:
 $(PREFIX)_$(ALIGNMENT_MODE)-params_crdsorted_mmapreads_over_hetSNVs.bam: $(FINAL_ALIGNMENT_FILENAME)
-	cat $(PGENOME_DIR)/$(VCF_SAMPLE_ID)_hetSNVs_h1.bed $(PGENOME_DIR)/$(VCF_SAMPLE_ID)_hetSNVs_h2.bed | \
+	cat $(PGENOME_DIR)/$(VCF_SAMPLE_ID)_hetSNVs_hap1.bed $(PGENOME_DIR)/$(VCF_SAMPLE_ID)_hetSNVs_hap2.bed | \
 	$(SAMTOOLS) view -h -L - $< | awk '$$5!="255" {print $$0}' | \
 	$(SAMTOOLS) view -b - > $@
 	$(SAMTOOLS) index $@
@@ -208,7 +208,7 @@ $(PREFIX)_$(ALIGNMENT_MODE)-params_crdsorted_mmapreads_over_hetSNVs.bam: $(FINAL
 
 # uniq alns over hetSNVs:
 $(PREFIX)_$(ALIGNMENT_MODE)-params_crdsorted_uniqreads_over_hetSNVs.bam: $(FINAL_ALIGNMENT_FILENAME)
-	cat $(PGENOME_DIR)/$(VCF_SAMPLE_ID)_hetSNVs_h1.bed $(PGENOME_DIR)/$(VCF_SAMPLE_ID)_hetSNVs_h2.bed | \
+	cat $(PGENOME_DIR)/$(VCF_SAMPLE_ID)_hetSNVs_hap1.bed $(PGENOME_DIR)/$(VCF_SAMPLE_ID)_hetSNVs_hap2.bed | \
 	$(SAMTOOLS) view -h -q 255 -L - $< | \
 	$(SAMTOOLS) view -b - > $@
 	$(SAMTOOLS) index $@

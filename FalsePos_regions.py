@@ -89,11 +89,11 @@ if __name__=='__main__':
     with open(ifile, 'r') as inf:
 	inf.readline()
 	for line in inf:
-            region,h1_count,h2_count,h1_allele_ratio,p_binom,snv_count,snv_coords = line.split('\t')
+            region,hap1_count,hap2_count,hap1_allele_ratio,p_binom,snv_count,snv_coords = line.split('\t')
             act_pvals_list.append(float(p_binom))
             #counts = [int(e) for e in [cA, cC, cG, cT]]
             #counts = sorted(counts, reverse=True)[:2]
-            counts = [int(h1_count), int(h2_count)]
+            counts = [int(hap1_count), int(hap2_count)]
             cnt_sums_list.append(sum(counts))
     act_pvals = numpy.array(act_pvals_list)
     cnt_sums  = numpy.array(cnt_sums_list)

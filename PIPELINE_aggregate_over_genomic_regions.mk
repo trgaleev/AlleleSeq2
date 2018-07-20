@@ -47,7 +47,7 @@ $(info $(empty_string))
 ######################
 
  
-all: $(PREFIX)_region_h1_ratios.filtered_counts.chrs1-22$(KEEP_CHR).pdf $(PREFIX)_region_h1_ratios.chrs1-22$(KEEP_CHR).$(Cntthresh_tot)-tot_$(Cntthresh_min)-min_cnt.pdf $(PREFIX)_interesting_regions.FDR-$(FDR_CUTOFF).binom.chrs1-22$(KEEP_CHR).$(Cntthresh_tot)-tot_$(Cntthresh_min)-min_cnt.tsv $(PREFIX)_interesting_regions.FDR-$(FDR_CUTOFF).betabinom.chrs1-22$(KEEP_CHR).$(Cntthresh_tot)-tot_$(Cntthresh_min)-min_cnt.tsv
+all: $(PREFIX)_region_hap1_ratios.filtered_counts.chrs1-22$(KEEP_CHR).pdf $(PREFIX)_region_hap1_ratios.chrs1-22$(KEEP_CHR).$(Cntthresh_tot)-tot_$(Cntthresh_min)-min_cnt.pdf $(PREFIX)_interesting_regions.FDR-$(FDR_CUTOFF).binom.chrs1-22$(KEEP_CHR).$(Cntthresh_tot)-tot_$(Cntthresh_min)-min_cnt.tsv $(PREFIX)_interesting_regions.FDR-$(FDR_CUTOFF).betabinom.chrs1-22$(KEEP_CHR).$(Cntthresh_tot)-tot_$(Cntthresh_min)-min_cnt.tsv
 
 # todo
 # this seems to work, but the way it deals with paths, filenames, etc needs to be cleaned up
@@ -55,8 +55,8 @@ all: $(PREFIX)_region_h1_ratios.filtered_counts.chrs1-22$(KEEP_CHR).pdf $(PREFIX
 # fix columns
 $(PREFIX)_interesting_regions.FDR-$(FDR_CUTOFF).betabinom.chrs1-22$(KEEP_CHR).$(Cntthresh_tot)-tot_$(Cntthresh_min)-min_cnt.tsv: $(PREFIX)_region_filtered_counts.chrs1-22$(KEEP_CHR).$(Cntthresh_tot)-tot_$(Cntthresh_min)-min_cnt.tsv
 	awk '{print $$1"\t"$$2"\t"$$3"\t"$$2"\t"$$3"\t0\t0\t"$$2+$$3"\t"$$4"\t1.0"}' $< | \
-		sed 's/h1_count\th2_count\t0\t0\t0/cA\tcC\tcG\tcT\tsum_ref_n_alt_cnts/' | \
-		sed 's/h1_allele_ratio\t1.0/ref_allele_ratio\tcnv/' > $(PREFIX)_region_filtered_counts_min.$(Cntthresh_tot)-total.$(Cntthresh_min)-lower.tsv.tmp
+		sed 's/hap1_count\thap2_count\t0\t0\t0/cA\tcC\tcG\tcT\tsum_ref_n_alt_cnts/' | \
+		sed 's/hap1_allele_ratio\t1.0/ref_allele_ratio\tcnv/' > $(PREFIX)_region_filtered_counts_min.$(Cntthresh_tot)-total.$(Cntthresh_min)-lower.tsv.tmp
 	Rscript $(PL)/alleledb_calcOverdispersion.R \
 		$(PREFIX)_region_filtered_counts_min.$(Cntthresh_tot)-total.$(Cntthresh_min)-lower.tsv.tmp \
 		$(PREFIX)_region_FDR-$(FDR_CUTOFF).betabinomial.chrs1-22$(KEEP_CHR).$(Cntthresh_tot)-tot_$(Cntthresh_min)-min 
@@ -74,15 +74,15 @@ $(PREFIX)_interesting_regions.FDR-$(FDR_CUTOFF).binom.chrs1-22$(KEEP_CHR).$(Cntt
 	cat $< | python $(PL)/filter_regions_by_pval.py $(PREFIX)_region_FDR-$(FDR_CUTOFF).binom.chrs1-22$(KEEP_CHR).$(Cntthresh_tot)-tot_$(Cntthresh_min)-min_cnt.txt > $@
 
 # allelic ratio distrs
-$(PREFIX)_region_h1_ratios.chrs1-22$(KEEP_CHR).$(Cntthresh_tot)-tot_$(Cntthresh_min)-min_cnt.pdf: $(PREFIX)_region_filtered_counts.chrs1-22$(KEEP_CHR).$(Cntthresh_tot)-tot_$(Cntthresh_min)-min_cnt.tsv
-	cat $< | python $(PL)/plot_AllelicRatio_distribution.py $(PREFIX)_region_filtered_counts.chrs1-22$(KEEP_CHR).$(Cntthresh_tot)-tot_$(Cntthresh_min)-min_cnt h1_allele_ratio
+$(PREFIX)_region_hap1_ratios.chrs1-22$(KEEP_CHR).$(Cntthresh_tot)-tot_$(Cntthresh_min)-min_cnt.pdf: $(PREFIX)_region_filtered_counts.chrs1-22$(KEEP_CHR).$(Cntthresh_tot)-tot_$(Cntthresh_min)-min_cnt.tsv
+	cat $< | python $(PL)/plot_AllelicRatio_distribution.py $(PREFIX)_region_filtered_counts.chrs1-22$(KEEP_CHR).$(Cntthresh_tot)-tot_$(Cntthresh_min)-min_cnt hap1_allele_ratio
 
 $(PREFIX)_region_filtered_counts.chrs1-22$(KEEP_CHR).$(Cntthresh_tot)-tot_$(Cntthresh_min)-min_cnt.tsv: $(PREFIX)_region_filtered_counts.chrs1-22$(KEEP_CHR).tsv
 	cat $< | python $(PL)/filter_regions_by_counts.py $(Cntthresh_tot) $(Cntthresh_min) > $@
 
 # allelic ratio distrs
-$(PREFIX)_region_h1_ratios.filtered_counts.chrs1-22$(KEEP_CHR).pdf: $(PREFIX)_region_filtered_counts.chrs1-22$(KEEP_CHR).tsv
-	cat $< | python $(PL)/plot_AllelicRatio_distribution.py $(PREFIX)_region_filtered_counts.chrs1-22$(KEEP_CHR) h1_allele_ratio
+$(PREFIX)_region_hap1_ratios.filtered_counts.chrs1-22$(KEEP_CHR).pdf: $(PREFIX)_region_filtered_counts.chrs1-22$(KEEP_CHR).tsv
+	cat $< | python $(PL)/plot_AllelicRatio_distribution.py $(PREFIX)_region_filtered_counts.chrs1-22$(KEEP_CHR) hap1_allele_ratio
 
 $(PREFIX)_region_filtered_counts.chrs1-22$(KEEP_CHR).tsv: $(PREFIX)_region_raw_counts_uniq.tsv $(PREFIX)_region_raw_counts_mmap.tsv
 	awk '{print $$1"\t"$$2"\t"$$3"\t"$$4"\t"$$5"\t"$$6}' $< | \
@@ -90,22 +90,22 @@ $(PREFIX)_region_filtered_counts.chrs1-22$(KEEP_CHR).tsv: $(PREFIX)_region_raw_c
 	python $(PL)/filter_regions_w_mmaps.py $(AMB_MODE) \
 	$(PREFIX)_discarded_regions.tsv $(PREFIX)_regions_w_mmaps.log $(PREFIX)_region_raw_counts_mmap.tsv > $@
 
-$(PREFIX)_region_raw_counts_mmap.tsv: hets_regions_h2.bed
-	cat hets_regions_h1.bed hets_regions_h2.bed | $(BEDTOOLS_intersectBed) -a stdin -b $(MMAP_ALN_FILES) -split -wb -bed | \
-	python $(PL)/intersect2counts.py mmap hets_regions_h1.bed > $@
+$(PREFIX)_region_raw_counts_mmap.tsv: hets_regions_hap2.bed
+	cat hets_regions_hap1.bed hets_regions_hap2.bed | $(BEDTOOLS_intersectBed) -a stdin -b $(MMAP_ALN_FILES) -split -wb -bed | \
+	python $(PL)/intersect2counts.py mmap hets_regions_hap1.bed > $@
 
 # allowing multiple UNIQ_ALN_FILES files, but probably slower (since became -b instead of -a), also changes to intersect2counts.py to accomodate output file format
-#$(PREFIX)_region_counts.tsv: hets_regions_h1.bed hets_regions_h2.bed
-#        $(BEDTOOLS_intersectBed) -a $(UNIQ_ALN_FILES) -b hets_regions_h1.bed hets_regions_h2.bed -split -wb -bed | \
+#$(PREFIX)_region_counts.tsv: hets_regions_hap1.bed hets_regions_hap2.bed
+#        $(BEDTOOLS_intersectBed) -a $(UNIQ_ALN_FILES) -b hets_regions_hap1.bed hets_regions_hap2.bed -split -wb -bed | \
 #                python $(PL)/intersect2counts.py > $@
 
 
 # -split -- not counting reads that splice over a het
-$(PREFIX)_region_raw_counts_uniq.tsv: hets_regions_h2.bed
-	cat hets_regions_h1.bed hets_regions_h2.bed | $(BEDTOOLS_intersectBed) -a stdin -b $(UNIQ_ALN_FILES) -split -wb -bed | \
-	python $(PL)/intersect2counts.py uniq hets_regions_h1.bed > $@
+$(PREFIX)_region_raw_counts_uniq.tsv: hets_regions_hap2.bed
+	cat hets_regions_hap1.bed hets_regions_hap2.bed | $(BEDTOOLS_intersectBed) -a stdin -b $(UNIQ_ALN_FILES) -split -wb -bed | \
+	python $(PL)/intersect2counts.py uniq hets_regions_hap1.bed > $@
 
-hets_regions_h2.bed : $(REGIONS_FILE) $(COUNTS_FILE)
+hets_regions_hap2.bed : $(REGIONS_FILE) $(COUNTS_FILE)
 	grep -v '^#chr' $(COUNTS_FILE) | awk '{print $$1"\t"$$2-1"\t"$$2}' | $(BEDTOOLS_intersectBed) -a $(REGIONS_FILE) -b stdin | \
-	python $(PL)/refbed2hapcoords.py $(COUNTS_FILE) hets_regions_h1.bed hets_regions_h2.bed
+	python $(PL)/refbed2hapcoords.py $(COUNTS_FILE) hets_regions_hap1.bed hets_regions_hap2.bed
 

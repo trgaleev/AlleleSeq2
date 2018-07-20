@@ -17,7 +17,7 @@ with open(sys.argv[2],'w') as rm_regions_f:
     for line in sys.stdin:
 
         if not line.startswith('#'):
-            region, h1_count, h2_count, h1_allele_ratio, p_binom, snv_count = line.split('\t')
+            region, hap1_count, hap2_count, hap1_allele_ratio, p_binom, snv_count = line.split('\t')
 
             if region_chr_dict[region] in keep_chrs: sys.stdout.write(line)
             else: rm_regions_f.write('\t'.join([region, region_chr_dict[region]] + ['_chr_filter\n']))
