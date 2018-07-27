@@ -75,14 +75,14 @@ $(PREFIX)_interesting_regions.FDR-$(FDR_CUTOFF).binom.chrs1-22$(KEEP_CHR).$(Cntt
 
 # allelic ratio distrs
 $(PREFIX)_region_hap1_ratios.chrs1-22$(KEEP_CHR).$(Cntthresh_tot)-tot_$(Cntthresh_min)-min_cnt.pdf: $(PREFIX)_region_filtered_counts.chrs1-22$(KEEP_CHR).$(Cntthresh_tot)-tot_$(Cntthresh_min)-min_cnt.tsv
-	cat $< | python $(PL)/plot_AllelicRatio_distribution.py $(PREFIX)_region_filtered_counts.chrs1-22$(KEEP_CHR).$(Cntthresh_tot)-tot_$(Cntthresh_min)-min_cnt hap1_allele_ratio
+	Rscript $(PL)/plot_AllelicRatio_distribution.R $< $(PREFIX) region_filtered_counts.chrs1-22$(KEEP_CHR).$(Cntthresh_tot)-tot_$(Cntthresh_min)-min_cnt hap1_allele_ratio
 
 $(PREFIX)_region_filtered_counts.chrs1-22$(KEEP_CHR).$(Cntthresh_tot)-tot_$(Cntthresh_min)-min_cnt.tsv: $(PREFIX)_region_filtered_counts.chrs1-22$(KEEP_CHR).tsv
 	cat $< | python $(PL)/filter_regions_by_counts.py $(Cntthresh_tot) $(Cntthresh_min) > $@
 
 # allelic ratio distrs
 $(PREFIX)_region_hap1_ratios.filtered_counts.chrs1-22$(KEEP_CHR).pdf: $(PREFIX)_region_filtered_counts.chrs1-22$(KEEP_CHR).tsv
-	cat $< | python $(PL)/plot_AllelicRatio_distribution.py $(PREFIX)_region_filtered_counts.chrs1-22$(KEEP_CHR) hap1_allele_ratio
+	Rscript $(PL)/plot_AllelicRatio_distribution.R $< $(PREFIX) region_filtered_counts.chrs1-22$(KEEP_CHR) hap1_allele_ratio
 
 $(PREFIX)_region_filtered_counts.chrs1-22$(KEEP_CHR).tsv: $(PREFIX)_region_raw_counts_uniq.tsv $(PREFIX)_region_raw_counts_mmap.tsv
 	awk '{print $$1"\t"$$2"\t"$$3"\t"$$4"\t"$$5"\t"$$6}' $< | \

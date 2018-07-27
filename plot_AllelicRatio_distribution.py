@@ -10,9 +10,9 @@ df = pd.read_table(sys.stdin)
 #print df[1:5]
 #print df.shape
 
-if len(sys.argv) > 2:
-	colmn = sys.argv[2]
-	label = ' '.join(sys.argv[2].split('_'))
+if len(sys.argv) > 3:
+	colmn = sys.argv[3]
+	label = ' '.join(sys.argv[3].split('_'))
 else: 
 	colmn = "ref_allele_ratio"
 	label = "reference allele ratio"
@@ -22,5 +22,5 @@ p0 = ggplot(df, aes(colmn)) + \
 	xlab(label) + \
 	ggtitle(sys.argv[1].replace('_',' '))
 
-ggsave(p0, sys.argv[1]+"_"+colmn+"s.pdf", width=5, height=5)
+ggsave(p0, sys.argv[1] + "_" + colmn + "s." + sys.argv[2] + ".pdf", width=5, height=5)
 

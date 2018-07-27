@@ -141,7 +141,7 @@ $(PREFIX)_interestingHets.FDR-$(FDR_CUTOFF).binom.chrs1-22$(KEEP_CHR).$(Cntthres
 
 # allelic ratio distrs
 $(PREFIX)_ref_allele_ratios.filtered_counts.chrs1-22$(KEEP_CHR).$(Cntthresh_tot)-tot_$(Cntthresh_min)-min.pdf: $(PREFIX)_filtered_counts.chrs1-22$(KEEP_CHR).$(Cntthresh_tot)-tot_$(Cntthresh_min)-min_cnt.tsv
-	cat $< | python $(PL)/plot_AllelicRatio_distribution.py $(PREFIX)_filtered_counts.chrs1-22$(KEEP_CHR).$(Cntthresh_tot)-tot_$(Cntthresh_min)-min
+	Rscript $(PL)/plot_AllelicRatio_distribution.R $< $(PREFIX) filtered_counts.chrs1-22$(KEEP_CHR).$(Cntthresh_tot)-tot_$(Cntthresh_min)-min
 
 # filter based on total counts and min per allele count
 $(PREFIX)_filtered_counts.chrs1-22$(KEEP_CHR).$(Cntthresh_tot)-tot_$(Cntthresh_min)-min_cnt.tsv: $(PREFIX)_filtered_counts.chrs1-22$(KEEP_CHR).tsv
@@ -150,7 +150,7 @@ $(PREFIX)_filtered_counts.chrs1-22$(KEEP_CHR).$(Cntthresh_tot)-tot_$(Cntthresh_m
 
 # allelic ratio distrs
 $(PREFIX)_ref_allele_ratios.filtered_counts.chrs1-22$(KEEP_CHR).pdf: $(PREFIX)_filtered_counts.chrs1-22$(KEEP_CHR).tsv
-	cat $< | python $(PL)/plot_AllelicRatio_distribution.py $(PREFIX)_filtered_counts.chrs1-22$(KEEP_CHR)
+	Rscript $(PL)/plot_AllelicRatio_distribution.R $< $(PREFIX) filtered_counts.chrs1-22$(KEEP_CHR)
 
 # filter out sites in potential cnv regions and 
 # in non-autosomal chr; 
@@ -166,7 +166,7 @@ $(PREFIX)_filtered_counts.chrs1-22$(KEEP_CHR).tsv: $(PREFIX)_raw_counts.tsv $(PR
 
 # allelic ratio distrs
 $(PREFIX)_ref_allele_ratios.raw_counts.pdf: $(PREFIX)_raw_counts.tsv
-	cat $< | python $(PL)/plot_AllelicRatio_distribution.py $(PREFIX)_raw_counts
+	Rscript $(PL)/plot_AllelicRatio_distribution.R $< $(PREFIX) raw_counts
 
 # counts
 $(PREFIX)_raw_counts.tsv: $(PREFIX)_hap1_uniqreads.mpileup $(PREFIX)_hap2_uniqreads.mpileup
