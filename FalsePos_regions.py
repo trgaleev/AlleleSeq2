@@ -1,3 +1,4 @@
+# as in AlleleSeq_v1.2a; minor edits
 
 ''' Some notes on what is going on here.
 Basically, we want to use simulation to explicitly calculate a FDR for binomial tests on unbalanced alleles.  We use
@@ -89,7 +90,7 @@ if __name__=='__main__':
     with open(ifile, 'r') as inf:
 	inf.readline()
 	for line in inf:
-            region,hap1_count,hap2_count,hap1_allele_ratio,p_binom,snv_count,snv_coords = line.split('\t')
+            region,hap1_count,hap2_count,hap1_allele_ratio,p_binom,snv_count,snv_coords,mmap_log = line.split('\t')
             act_pvals_list.append(float(p_binom))
             #counts = [int(e) for e in [cA, cC, cG, cT]]
             #counts = sorted(counts, reverse=True)[:2]

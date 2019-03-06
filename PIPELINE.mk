@@ -7,13 +7,13 @@
 
 PL                               := ~/bin/AlleleSeq2
 #BOWTIE1                          := ~/bin/bowtie-1.1.1/bowtie
-NTHR                             := 1 # multithread, works for mapping, sorting
+NTHR                             := 1 # multithread, works for mapping, sorting, fastqc
 SAMTOOLS                         := ~/bin/samtools-1.3.1/samtools
 PICARD                           := ~/bin/picard-tools-2.1.1/picard.jar
 #JAVA                             := ~/bin/jre1.8.0_77/bin/java
 JAVA                             := java
 JAVA_MEM                         := 80g
-STAR                             := ~/bin/STAR/bin/Linux_x86_64/STAR
+STAR                             := ~/bin/STAR/STAR-2.6.0c/bin/Linux_x86_64/STAR
 FASTQC                           := fastqc
 CUTADAPT                         := ~/.local/bin/cutadapt
 
@@ -28,9 +28,8 @@ VCF_SAMPLE_ID                    := NULL
 
 ### params ##
 
-ALIGNMENT_MODE                           := NULL # can be 'ASE', 'ASB', 'custom', 'ASCA' -- currently, for atac-seq only and with known adapters 
-#todo: for ASCA, single-end compatibility, adapter detection step, dnase-seq
-RM_DUPLICATE_READS                       := off  # with 'on' duplicate reads will be removed using picard
+ALIGNMENT_MODE                           := NULL # can be 'ASE', 'ASB', 'custom', 'ASCA' -- currently, for with known adapters (if present) only
+RM_DUPLICATE_READS                       := on  # with 'on' duplicate reads will be removed using picard
 PERFORM_FASTQC                           := on
 
 # needed for all: ASE, ASB, custom, or ASCA:
@@ -56,7 +55,7 @@ STAR_parameters_file                     := $(PL)/STAR_custom_parameters_sample_
 # needed if ASCA, atac-seq:
 R1_ADAPTER_SEQ                           := CTGTCTCTTATA
 R2_ADAPTER_SEQ                           := CTGTCTCTTATA
-# for ASCA, Nextera and transposase adapter sequences trimming, similar to ENCODE prototype peak calling pipeline finds in ENTEx samples
+# for ASCA, Nextera and transposase adapter sequences trimming, similar to what ENCODE prototype peak calling pipeline finds in ENTEx samples
 # and discussion in https://www.biostars.org/p/215988/
 # #todo: incorporate more general adapter detection step
 
@@ -66,14 +65,17 @@ FDR_SIMS                         := 500
 FDR_CUTOFF                       := 0.05
 Cntthresh_tot                    := 6
 Cntthresh_min                    := 0
-AMB_MODE                         := adjust # 'adjust' or allelic ratio diff threshold for filtering
-KEEP_CHR                         := # empty or 'X'
+#AMB_MODE                         := adjust # 'adjust' or allelic ratio diff threshold for filtering
+# only 'adjust' mode only for now: add the 'weaker allele' base counts from multi-mapping reads, if any:
+# all of them or until balanced with the stonger to make sure the imbalance is not caused by the multimapping reads
+KEEP_CHR                         := # empty or e.g. 'X'
 
 
 ######################
 ### PIPELINE STEPS ###
 ######################
 
+# todo: a better way than using these 'tmp's?
 empty_string:=
 ifeq ($(READS_R2),$(empty_string))
   tmp1 = $(READS_R1:.gz=)
@@ -122,15 +124,23 @@ $(info $(empty_string))
 ### PIPELINE START ###
 ######################
 
-all: $(FASTQC_out) $(PREFIX)_ref_allele_ratios.raw_counts.pdf $(PREFIX)_ref_allele_ratios.filtered_counts.chrs1-22$(KEEP_CHR).pdf $(PREFIX)_ref_allele_ratios.filtered_counts.chrs1-22$(KEEP_CHR).$(Cntthresh_tot)-tot_$(Cntthresh_min)-min.pdf $(PREFIX)_interestingHets.FDR-$(FDR_CUTOFF).betabinom.chrs1-22$(KEEP_CHR).$(Cntthresh_tot)-tot_$(Cntthresh_min)-min_cnt.tsv 
-
-#all: $(FASTQC_out) $(PREFIX)_ref_allele_ratios.raw_counts.pdf $(PREFIX)_ref_allele_ratios.filtered_counts.chrs1-22$(KEEP_CHR).pdf $(PREFIX)_ref_allele_ratios.filtered_counts.chrs1-22$(KEEP_CHR).$(Cntthresh_tot)-tot_$(Cntthresh_min)-min.pdf $(PREFIX)_interestingHets.FDR-$(FDR_CUTOFF).binom.chrs1-22$(KEEP_CHR).$(Cntthresh_tot)-tot_$(Cntthresh_min)-min_cnt.tsv $(PREFIX)_interestingHets.FDR-$(FDR_CUTOFF).betabinom.chrs1-22$(KEEP_CHR).$(Cntthresh_tot)-tot_$(Cntthresh_min)-min_cnt.tsv 
+all: $(FASTQC_out) $(PREFIX)_ref_allele_ratios.raw_counts.pdf $(PREFIX)_ref_allele_ratios.filtered_counts.pdf $(PREFIX)_ref_allele_ratios.filtered_counts.chrs1-22$(KEEP_CHR).$(Cntthresh_tot)-tot_$(Cntthresh_min)-min.pdf $(PREFIX)_interestingHets.FDR-$(FDR_CUTOFF).binom.chrs1-22$(KEEP_CHR).$(Cntthresh_tot)-tot_$(Cntthresh_min)-min_cnt.tsv $(PREFIX)_interestingHets.FDR-$(FDR_CUTOFF).betabinom.chrs1-22$(KEEP_CHR).$(Cntthresh_tot)-tot_$(Cntthresh_min)-min_cnt.tsv 
 
 
-# this seems to work, but the way it deals with paths, filenames, etc needs to be cleaned up
+#todo: this seems to work, but the way it deals with paths, filenames, etc needs to be cleaned up
+#currently, keeping JC's betabinomial scripts with as little modifications as possible
+
 $(PREFIX)_interestingHets.FDR-$(FDR_CUTOFF).betabinom.chrs1-22$(KEEP_CHR).$(Cntthresh_tot)-tot_$(Cntthresh_min)-min_cnt.tsv: $(PREFIX)_filtered_counts.chrs1-22$(KEEP_CHR).$(Cntthresh_tot)-tot_$(Cntthresh_min)-min_cnt.tsv
-	Rscript $(PL)/alleledb_calcOverdispersion.R $< $(PREFIX)_FDR-$(FDR_CUTOFF).betabinomial.chrs1-22$(KEEP_CHR).$(Cntthresh_tot)-tot_$(Cntthresh_min)-min
-	Rscript $(PL)/alleledb_alleleseqBetabinomial.R $< $(PREFIX)_FDR-$(FDR_CUTOFF).betabinomial.chrs1-22$(KEEP_CHR).$(Cntthresh_tot)-tot_$(Cntthresh_min)-min $(PREFIX)_counts.FDR-$(FDR_CUTOFF).betabinom.chrs1-22$(KEEP_CHR).$(Cntthresh_tot)-tot_$(Cntthresh_min)-min_cnt.tsv $@ $(PREFIX)_FDR-$(FDR_CUTOFF).betabinom.chrs1-22$(KEEP_CHR).$(Cntthresh_tot)-tot_$(Cntthresh_min)-min_cnt.txt $(FDR_CUTOFF)
+	Rscript $(PL)/alleledb_calcOverdispersion.R \
+		$< \
+		$(PREFIX)_FDR-$(FDR_CUTOFF).betabinomial.chrs1-22$(KEEP_CHR).$(Cntthresh_tot)-tot_$(Cntthresh_min)-min
+	Rscript $(PL)/alleledb_alleleseqBetabinomial.R \
+		$< \
+		$(PREFIX)_FDR-$(FDR_CUTOFF).betabinomial.chrs1-22$(KEEP_CHR).$(Cntthresh_tot)-tot_$(Cntthresh_min)-min \
+		$(PREFIX)_counts.FDR-$(FDR_CUTOFF).betabinom.chrs1-22$(KEEP_CHR).$(Cntthresh_tot)-tot_$(Cntthresh_min)-min_cnt.tsv \
+		$@ \
+		$(PREFIX)_FDR-$(FDR_CUTOFF).betabinom.chrs1-22$(KEEP_CHR).$(Cntthresh_tot)-tot_$(Cntthresh_min)-min_cnt.txt \
+		$(FDR_CUTOFF)
 
 
 
@@ -144,25 +154,29 @@ $(PREFIX)_ref_allele_ratios.filtered_counts.chrs1-22$(KEEP_CHR).$(Cntthresh_tot)
 	Rscript $(PL)/plot_AllelicRatio_distribution.R $< $(PREFIX) filtered_counts.chrs1-22$(KEEP_CHR).$(Cntthresh_tot)-tot_$(Cntthresh_min)-min
 
 # filter based on total counts and min per allele count
-$(PREFIX)_filtered_counts.chrs1-22$(KEEP_CHR).$(Cntthresh_tot)-tot_$(Cntthresh_min)-min_cnt.tsv: $(PREFIX)_filtered_counts.chrs1-22$(KEEP_CHR).tsv
-	cat $< | python $(PL)/filter_by_counts.py $(Cntthresh_tot) $(Cntthresh_min) > $@
-
+# and in non-autosomal chr, optionally keeping X;
+$(PREFIX)_filtered_counts.chrs1-22$(KEEP_CHR).$(Cntthresh_tot)-tot_$(Cntthresh_min)-min_cnt.tsv: $(PREFIX)_filtered_counts.tsv
+	cat $< | \
+	python $(PL)/filter_non-autosomal_chr.py $(KEEP_CHR) | \
+	python $(PL)/filter_by_counts.py $(Cntthresh_tot) $(Cntthresh_min) > $@
 
 # allelic ratio distrs
-$(PREFIX)_ref_allele_ratios.filtered_counts.chrs1-22$(KEEP_CHR).pdf: $(PREFIX)_filtered_counts.chrs1-22$(KEEP_CHR).tsv
-	Rscript $(PL)/plot_AllelicRatio_distribution.R $< $(PREFIX) filtered_counts.chrs1-22$(KEEP_CHR)
+$(PREFIX)_ref_allele_ratios.filtered_counts.pdf: $(PREFIX)_filtered_counts.tsv
+	Rscript $(PL)/plot_AllelicRatio_distribution.R $< $(PREFIX) filtered_counts
 
-# filter out sites in potential cnv regions and 
-# in non-autosomal chr; 
+# filter out sites in potential cnv regions 
 # and sites with seemingly misphased/miscalled nearby variants
 # filter/adjust sites imbalanced likely due to unaccounted multi-mapping reads 
-$(PREFIX)_filtered_counts.chrs1-22$(KEEP_CHR).tsv: $(PREFIX)_raw_counts.tsv $(PREFIX)_hap1_mmapreads.mpileup $(PREFIX)_hap2_mmapreads.mpileup
+# will use 'adjust' only for now
+$(PREFIX)_filtered_counts.tsv: $(PREFIX)_raw_counts.tsv $(PREFIX)_hap1_mmapreads.mpileup $(PREFIX)_hap2_mmapreads.mpileup
 	cat $< | \
-	python $(PL)/filter_cnv_sites.py $(PREFIX)_discarded_HetSNVs.tsv $(PGENOME_DIR)/$(VCF_SAMPLE_ID)_hetSNVs_rd.tab | \
-	python $(PL)/filter_non-autosomal_chr.py $(PREFIX)_discarded_HetSNVs.tsv $(KEEP_CHR) | \
-	python $(PL)/filter_phase_warnings.py $(PREFIX)_discarded_HetSNVs.tsv | \
-	python $(PL)/filter_sites_w_mmaps.py $(AMB_MODE) $(PREFIX)_discarded_HetSNVs.tsv $(PREFIX)_sites_w_mmaps.log \
+	python $(PL)/filter_cnv_sites.py $(PREFIX)_discarded_HetSNVs_potential-CNV.log $(PGENOME_DIR)/$(VCF_SAMPLE_ID)_hetSNVs_rd.tab | \
+	python $(PL)/filter_phase_warnings.py $(PREFIX)_discarded_HetSNVs_warn-haplotype.log | \
+	#python $(PL)/filter_sites_w_mmaps.py $(AMB_MODE) $(PREFIX)_discarded_HetSNVs_warn-mmaps.log $(PREFIX)_mmap_reads_over_hetSNVs.log \
+	python $(PL)/filter_sites_w_mmaps.py adjust $(PREFIX)_discarded_HetSNVs_warn-mmaps.log $(PREFIX)_mmap_reads_over_hetSNVs.log \
 		$(PREFIX)_hap1_mmapreads.mpileup $(PREFIX)_hap2_mmapreads.mpileup > $@
+
+
 
 # allelic ratio distrs
 $(PREFIX)_ref_allele_ratios.raw_counts.pdf: $(PREFIX)_raw_counts.tsv
@@ -172,7 +186,7 @@ $(PREFIX)_ref_allele_ratios.raw_counts.pdf: $(PREFIX)_raw_counts.tsv
 $(PREFIX)_raw_counts.tsv: $(PREFIX)_hap1_uniqreads.mpileup $(PREFIX)_hap2_uniqreads.mpileup
 	python $(PL)/pileup2counts.py 1 $(PGENOME_DIR)/$(VCF_SAMPLE_ID)_hetSNVs_ref.bed \
 	$(PGENOME_DIR)/$(VCF_SAMPLE_ID)_hetSNVs_hap1.bed $(PGENOME_DIR)/$(VCF_SAMPLE_ID)_hetSNVs_hap2.bed \
-	$(PREFIX)_discarded_HetSNVs.tsv \
+	$(PREFIX)_discarded_HetSNVs_from-pileups.log \
 	$(PREFIX)_hap1_uniqreads.mpileup $(PREFIX)_hap2_uniqreads.mpileup > $@
 
 

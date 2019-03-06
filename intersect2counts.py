@@ -6,13 +6,17 @@ import scipy.stats
 e_list = []
 e_dict = {}
 for line in sys.stdin:
-    #chr1_hap1    1055394    1055395    D00777:83:C8R9PACXX:5:2107:17632:19962/1    255    -    1055295    1055396    0,0,0    1    101,    0,    1    chr1_hap1    1055394    1055395    ENSG00000188157.13
-    # chr1_hap1	909877	909878	chr1_909764_910952	5	chr1_hap1	909833	909909	GLP3B7-C38:1381:HY5WKBCXX:2:1108:3941:50109/1	255	+
 
 
+    # seems that, for single -b bam file, the formatting is:
     # chr1_hap1	187152	187153	ENSG00000279457.3	chr1_hap1	186410	187170	D00777:64:C84FFACXX:4:2109:3419:88661/1	255	+
+    # for two bam files (the new colmn shows which file?)
+    # chr1_hap1	912441	912442	chr1_912852_913352	2	chr1_hap1	912401	912477	GLP0C0-857:1553:HHVYFBCXY:2:1115:1549:46799	255	+
 
-    rname = line.split('\t')[7].split('/')[0]   # the last split is to not double-count paired ends of the same read
+    if    len(line.split('\t')) == 10: rname = line.split('\t')[7].split('/')[0]   # the last split is to not double-count paired ends of the same read
+    elif  len(line.split('\t')) == 11: rname = line.split('\t')[8].split('/')[0]  
+    else: sys.exit(sys.argv[0] + ':\t confused with intersecBed output:\n' + line)  
+
     ename = line.split('\t')[3]
     hap = line.split('\t')[0].split('_')[1]
     snv = line.split('\t')[0] + '_' + line.split()[2]
@@ -21,8 +25,9 @@ for line in sys.stdin:
         e_list.append(ename)
         e_dict[ename]={'hap1': set(), 'hap2': set(), 'snv_count': 0, 'snvs': ':'}
 
-    # may not include either hap's coord, if no reads mapped to it
-    # todo: remove if this isn't necessary, or get this info from the bed file
+    # todo: may not include either hap's coord, if no reads mapped to it
+    # so, for some regions in the 'snv_hap1_hap2_coords', some hetSNV may have coord from only one hap 
+    # remove this column here in all future steps if it isn't necessary, or get this info from the bed file
 
     e_dict[ename][hap].add(rname)
     if snv not in e_dict[ename]['snvs']: e_dict[ename]['snvs'] += snv + ':'

@@ -13,7 +13,9 @@ MAX_RAM                       := 45G
 PL                            := ~/bin/AlleleSeq2/
 
 # matters if used STAR genomeGenerate only
-STAR                          := ~/bin/STAR/bin/Linux_x86_64/STAR
+#STAR                          := ~/bin/STAR/bin/Linux_x86_64/STAR
+#STAR                          := ~/bin/STAR/STAR-2.5.2b/bin/Linux_x86_64/STAR
+STAR                          := ~/bin/STAR/STAR-2.6.0c/bin/Linux_x86_64/STAR
 N_THREADS                     := 1        
 STAR_limitGenomeGenerateRAM   := 31000000000 # (bytes, default in STAR)
 

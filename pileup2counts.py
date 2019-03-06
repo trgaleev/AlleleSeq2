@@ -3,6 +3,7 @@ import sys
 import scipy.stats
 import re
 import read_pileup
+import os
 from collections import defaultdict
 
 
@@ -11,6 +12,7 @@ bases = set(['A', 'C', 'G', 'T', 'N'])
 discarded = set([])
 
 rmvdhets_file = open(sys.argv[5],'w')
+#todo: fix formatting of this file
 
 duplicate_posns = {}
 # read the hap1 and hap2 coords
@@ -89,8 +91,10 @@ with open(sys.argv[2], 'r') as in_ref:
         # or a non A, C, G, T, N nt in vcf
         if k not in hetSNV_dict: continue
 
-        basecnts_hap1 = pileup_dict.get(hetSNV_dict[k].get('hap1_pos',None), {'A':0, 'C':0, 'G':0, 'T':0, 'N':0, 'warning':'zero_cnt', 'hap1_a':'.'})
-        basecnts_hap2 = pileup_dict.get(hetSNV_dict[k].get('hap2_pos',None), {'A':0, 'C':0, 'G':0, 'T':0, 'N':0, 'warning':'zero_cnt', 'hap2_a':'.'})
+        #basecnts_hap1 = pileup_dict.get(hetSNV_dict[k].get('hap1_pos',None), {'A':0, 'C':0, 'G':0, 'T':0, 'N':0, 'warning':'zero_cnt', 'hap1_a':'.'})
+        #basecnts_hap2 = pileup_dict.get(hetSNV_dict[k].get('hap2_pos',None), {'A':0, 'C':0, 'G':0, 'T':0, 'N':0, 'warning':'zero_cnt', 'hap2_a':'.'})
+        basecnts_hap1 = pileup_dict.get(hetSNV_dict[k].get('hap1_pos',None), {'A':0, 'C':0, 'G':0, 'T':0, 'N':0, 'warning':'.', 'hap1_a':'.'})
+        basecnts_hap2 = pileup_dict.get(hetSNV_dict[k].get('hap2_pos',None), {'A':0, 'C':0, 'G':0, 'T':0, 'N':0, 'warning':'.', 'hap2_a':'.'})
 
         basecnts = {
             'A':basecnts_hap1['A'] + basecnts_hap2['A'],
@@ -107,6 +111,7 @@ with open(sys.argv[2], 'r') as in_ref:
         # need at least one read to get at least one hap nt from mpileups
         # using that to figure out what phasing was assigned by vcf2diploid
         # if wasn't phased in the .vcf:
+	# todo: fix this useless(?) sys.argv
 
             if   (basecnts_hap1['hap1_a'], basecnts_hap2['hap2_a']) in [(hetSNV_dict[k]['hap1_a'], hetSNV_dict[k]['hap2_a']), (hetSNV_dict[k]['hap1_a'], '.'), ('.', hetSNV_dict[k]['hap2_a'])]:
                 basecnts_hap1['hap1_a'], basecnts_hap2['hap2_a'] = hetSNV_dict[k]['hap1_a'], hetSNV_dict[k]['hap2_a']
@@ -122,16 +127,16 @@ with open(sys.argv[2], 'r') as in_ref:
 
 
             ref_cnt = basecnts[hetSNV_dict[k]['r_a']]
-            if ref_cnt > tot_cnt:  # miscalled multi-allelic variant? 
-                rmvdhets_file.write(k.split('_')[0] + '\t' + k.split('_')[1] + '\tref_allele:' + str(ref_cnt) + '_hap1:' + str(basecnts[hetSNV_dict[k]['hap1_a']]) + '_hap2:' + str(basecnts[hetSNV_dict[k]['hap2_a']]) + '\n')
+            if ref_cnt > tot_cnt:  # maybe a miscalled multi-allelic variant? 
+                rmvdhets_file.write(k.split('_')[0] + '\t' + k.split('_')[1] + '\tref_allele:' + str(ref_cnt) + '__hap1:' + str(basecnts[hetSNV_dict[k]['hap1_a']]) + '__hap2:' + str(basecnts[hetSNV_dict[k]['hap2_a']]) + '\n')
                 continue
 
             pbinom = binom.binomtest(ref_cnt, tot_cnt, 0.5)
             sys.stdout.write('\t'.join([    
                 k.split('_')[0],
                 k.split('_')[1],
-                hetSNV_dict[k].get('hap1_pos','notLifted?'),
-                hetSNV_dict[k].get('hap2_pos','notLifted?'),
+                hetSNV_dict[k].get('hap1_pos','not_lifted?'),
+                hetSNV_dict[k].get('hap2_pos','not_lifted?'),
                 hetSNV_dict[k]['r_a'],
                 basecnts_hap1['hap1_a'],
                 basecnts_hap2['hap2_a'],
@@ -148,3 +153,5 @@ with open(sys.argv[2], 'r') as in_ref:
             ])+'\n')
 
 rmvdhets_file.close()
+
+if not os.path.getsize(sys.argv[5]): os.remove(sys.argv[5])

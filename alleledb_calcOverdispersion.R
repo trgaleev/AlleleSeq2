@@ -1,4 +1,5 @@
 #20170212 cjieming/alleleDB alleledb_v2.0 script 
+#Chen J et al. (2016). Nat Commun. 7:11101 
 # with minor modifications to incorporate into the pipeline
 
 
@@ -101,7 +102,7 @@ filename = args[1]
  
 data = read.table(filename, header=T, stringsAsFactors=F, comment.char="%", check.names=FALSE)
 
-print (head(data))
+#print (head(data))
 
 #dir.create("betabinomial")
 dir.create(args[2])

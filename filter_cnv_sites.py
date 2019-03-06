@@ -8,7 +8,9 @@ with open(sys.argv[2], 'r') as cnvfile:
             cnv_dict[chrm+'_'+snppos] = rd
 
 
-with open(sys.argv[1], 'a') as rm_hetSNV_f:
+with open(sys.argv[1], 'w') as rm_hetSNV_f:
+#rm_hetSNV_f = open(sys.argv[1], 'w')
+    rm_hetSNV_f.write('#chr\tref_coord\tcA_cC_cG_cT__rd\n')
     for line in sys.stdin:
         if not line.startswith('#'):
             (chrm,ref_coord,hap1_coord,hap2_coord,ref_allele,hap1_allele,hap2_allele,
@@ -19,5 +21,6 @@ with open(sys.argv[1], 'a') as rm_hetSNV_f:
                 sys.stdout.write(line.strip()+'\t'+str(rd)+'\n')
             else: 
                 rm_hetSNV_f.write('\t'.join([chrm, ref_coord, 
-                                     '_'.join([cA,cC,cG,cT,'','rd:'+str(rd)])])+'\n')
+                                     '_'.join([cA,cC,cG,cT,'',str(rd)])])+'\n')
         else: sys.stdout.write(line.strip()+'\tcnv\n')
+#rm_hetSNV_f.close()

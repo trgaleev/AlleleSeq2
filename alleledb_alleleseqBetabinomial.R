@@ -1,4 +1,5 @@
 #20170212 cjieming/alleleDB alleledb_v2.0 script
+#Chen J et al. (2016). Nat Commun. 7:11101 
 # with minor modifications to incorporate into the pipeline
 
 
@@ -23,7 +24,7 @@ library(VGAM, lib.loc="~/R_libs/")
 ### data
 
 data1 = read.table(args[1], header=T, stringsAsFactors=F, comment.char="%", check.names=F)
-print(head(data1))
+#print(head(data1))
 #filename2 = "betabinomial/b_chosen.grad.txt"
 filename2 = paste0(args[2],'/',"b_chosen.grad.txt")
 data2 = read.table(filename2, header=T, stringsAsFactors=F)
@@ -193,7 +194,7 @@ FDR.txt = FDR.txt[-nrow(FDR.txt),]
 ## take in counts.txt and filter by p.betabin and cnv
 #interestingHets.betabinom = data1[data1$p.betabin<=p.choice.betabin,]
 interestingHets.betabinom = data1[(data1$p.betabin<=p.choice.betabin.2) & (data1$cnv>=0.5 & data1$cnv<=1.5),]
-print (head(interestingHets.betabinom))
+#print (head(interestingHets.betabinom))
 
 ## printing files
 write.table(data1,file=args[3], sep="\t",

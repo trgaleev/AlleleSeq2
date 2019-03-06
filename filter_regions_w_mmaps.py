@@ -1,20 +1,21 @@
 import sys
 import binom
 
+#todo: needs clean-up, also, maybe not carry all columns after filters
 
 def outwrite(l, log_mm='.'):
     sys.stdout.write('\t'.join([l.strip(), log_mm])+'\n')
                                    
 def logwrite(region, mm_hap1_count, mm_hap2_count, comment):
-    log.write('\t'.join([region, mm_hap1_count + '_', comment])+'\n')
+    log.write('\t'.join([region, mm_hap1_count + '_' + mm_hap2_count, comment])+'\n')
 
 def rmsiteswrite(region, mm_hap1_count, mm_hap2_count, comment):
     rm_regions_f.write('\t'.join(region + [mm_hap1_count+'_'+mm_hap2_count+'__'+comment])+'\n')
 
 log = open(sys.argv[3], 'w')
-rm_regions_f = open(sys.argv[2], 'w')
 mode = sys.argv[1]
-log.write('\t'.join(['region', 'mm_count:hap1_hap2', 'mm_log\n']))
+if mode != 'adjust': rm_regions_f = open(sys.argv[2], 'w')
+log.write('\t'.join(['#region', 'mm_count:hap1_hap2', 'mm_log\n']))
 
 mm_counts_dict = {}
 with open(sys.argv[4], 'r') as mm_file:
@@ -28,7 +29,7 @@ sys.stdout.write(sys.stdin.readline().strip()+'\tmmap_log\n')
 
 
 for line in sys.stdin:
-    region, hap1_count, hap2_count, hap1_allele_ratio, p_binom, snv_count = line.strip().split('\t')
+    region, hap1_count, hap2_count, hap1_allele_ratio, p_binom, snv_count, snv_hap1_hap2_coords = line.strip().split('\t')
 
     if region not in mm_counts_dict:
         outwrite(l=line, log_mm='no_mmap_reads')
@@ -56,7 +57,8 @@ for line in sys.stdin:
 
     if  weaker_hap_mm_count == 0: 
         outwrite(l=line, log_mm=weaker_hap+':0')
-        logwrite(line, mm_counts_dict[region]['hap1_count'], mm_counts_dict[region]['hap2_count'],  weaker_hap+':0')
+#        logwrite(line, mm_counts_dict[region]['hap1_count'], mm_counts_dict[region]['hap2_count'],  weaker_hap+':0')
+        logwrite(region, mm_counts_dict[region]['hap1_count'], mm_counts_dict[region]['hap2_count'],  weaker_hap+':0')
     else: 
         # now, either remove the site if the allelic ratio changes by more than a threshold
         if mode != 'adjust':
@@ -89,11 +91,13 @@ for line in sys.stdin:
                 str(new_hap1_allele_ratio),
                 str(new_p_binom), 
                 snv_count,
+		snv_hap1_hap2_coords,
                 weaker_hap + ':+' + str(int(diff))
                 ])+'\n')
 
-            logwrite(line, mm_counts_dict[region]['hap1_count'], mm_counts_dict[region]['hap2_count'], weaker_hap+':+'+str(int(diff)))
+            #logwrite(line, mm_counts_dict[region]['hap1_count'], mm_counts_dict[region]['hap2_count'], weaker_hap+':+'+str(int(diff)))
+            logwrite(region, mm_counts_dict[region]['hap1_count'], mm_counts_dict[region]['hap2_count'], weaker_hap+':+'+str(int(diff)))
 
 
-rm_regions_f.close()
+if mode != 'adjust': rm_regions_f.close()
 log.close()

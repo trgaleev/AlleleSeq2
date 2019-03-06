@@ -1,4 +1,5 @@
-
+# as in AlleleSeq_v1.2a; minor edits
+ 
 ''' Some notes on what is going on here.
 Basically, we want to use simulation to explicitly calculate a FDR for binomial tests on unbalanced alleles.  We use
 a binomial pvalue test to determine whether the ratio of alleles departs significantly from what would be expected

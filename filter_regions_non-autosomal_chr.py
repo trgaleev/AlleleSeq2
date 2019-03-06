@@ -4,8 +4,8 @@
 import sys
 
 keep_chrs     = ['chr' + str(c) for c in range(1,23)] + [str(c) for c in range(1,23)]
-if len(sys.argv) > 3: 
-    keep_chrs = keep_chrs + ['chr' + c for c in sys.argv[3:]] + sys.argv[3:]
+if len(sys.argv) > 2: 
+    keep_chrs = keep_chrs + ['chr' + c for c in sys.argv[2:]] + sys.argv[2:]
 
 region_chr_dict = {}
 with open(sys.argv[1],'r') as regionsf:
@@ -13,12 +13,12 @@ with open(sys.argv[1],'r') as regionsf:
         chrm, _, _, region = line.strip().split('\t')
         region_chr_dict [region] = chrm      
 
-with open(sys.argv[2],'w') as rm_regions_f:
-    for line in sys.stdin:
+#with open(sys.argv[2],'w') as rm_regions_f:
+for line in sys.stdin:
 
-        if not line.startswith('#'):
-            region, hap1_count, hap2_count, hap1_allele_ratio, p_binom, snv_count = line.split('\t')
+    if not line.startswith('#'):
+        region, hap1_count, hap2_count, hap1_allele_ratio, p_binom, snv_count, snv_hap1_hap2_coords, mmap_log = line.split('\t')
 
-            if region_chr_dict[region] in keep_chrs: sys.stdout.write(line)
-            else: rm_regions_f.write('\t'.join([region, region_chr_dict[region]] + ['_chr_filter\n']))
-        else: sys.stdout.write(line)
+        if region_chr_dict[region] in keep_chrs: sys.stdout.write(line)
+#        else: rm_regions_f.write('\t'.join([region, region_chr_dict[region]] + ['_chr_filter\n']))
+    else: sys.stdout.write(line)

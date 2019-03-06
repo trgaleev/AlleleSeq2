@@ -2,6 +2,8 @@ import sys
 import read_pileup
 import binom
 
+#todo: needs clean-up, also, maybe not carry all columns after filters
+
 def outwrite(l, log_mm='.'):
     sys.stdout.write('\t'.join([l.strip(), log_mm])+'\n')
                                    
@@ -14,10 +16,11 @@ def rmsiteswrite(l, mm_counts, comment):
     rm_hetSNV_f.write('\t'.join(l.split('\t')[:2] + [mm_cnts+'__'+comment])+'\n')
 
 
-log = open(sys.argv[3],'w')
-rm_hetSNV_f = open(sys.argv[2], 'a')
 mode = sys.argv[1]
-log.write('\t'.join(['chr', 'pos', 'max_mm_count:A_C_G_T_N', 'mm_hap1_warn;mm_hap2_warn;mm_log\n']))
+log = open(sys.argv[3],'w')
+if mode != 'adjust': rm_hetSNV_f = open(sys.argv[2], 'w')
+if mode != 'adjust': rm_hetSNV_f.write('#chr\tref_coord\tcA_cC_cG_cT__weaker_allele:change_in_ratio\n')
+log.write('\t'.join(['#chr', 'pos', '(max_mm):cA_cC_cG_cT', 'mm_hap1_warn;mm_hap2_warn;mm_log\n']))
 
 mm_pileup_dict = read_pileup.pileup_to_basecnts(sys.argv[4:])
 
@@ -40,7 +43,7 @@ for line in sys.stdin:
             'N': max(hap1_mm_basecnts['N'], hap2_mm_basecnts['N'])
     }
 
-    # now, only bother if the unique counts aren't equal and the 'weaker' allele is seen in multi-mapped reads
+    # now, only bother if the unique read counts aren't equal and the 'weaker' allele is seen in multi-mapped reads
     um_basecnts = {'A':float(cA), 'C':float(cC), 'G':float(cG), 'T':float(cT), 'N':float(cN)}
     if   um_basecnts[hap1_allele] > um_basecnts[hap2_allele]: 
         weaker = hap2_allele
@@ -62,11 +65,9 @@ for line in sys.stdin:
             new = (um_basecnts[weaker] + float(mm_basecnts[weaker])) / (um_basecnts[hap1_allele] + um_basecnts[hap2_allele] + mm_basecnts[weaker]) 
             old = um_basecnts[weaker] / (um_basecnts[hap1_allele] + um_basecnts[hap2_allele])
             if (new - old) > float(mode):
-               #logwrite(line, mm_basecnts, ';'.join([hap1_mm_basecnts['warning'], hap2_mm_basecnts['warning'],'.', weaker+'_removed']))
                 logwrite(line, mm_basecnts, ';'.join([hap1_mm_basecnts['warning'], hap2_mm_basecnts['warning'], weaker+'_removed']))
-                rmsiteswrite(line, mm_basecnts, weaker+';')
+                rmsiteswrite(line, mm_basecnts, weaker + ':' + str(round(new-old,2)))
             else:
-               #logwrite(line, mm_basecnts, ';'.join([hap1_mm_basecnts['warning'], hap2_mm_basecnts['warning'],'.', weaker+'_within_thresh']))
                 logwrite(line, mm_basecnts, ';'.join([hap1_mm_basecnts['warning'], hap2_mm_basecnts['warning'], weaker+'_within_thresh']))
                 outwrite(line, weaker+':'+str(mm_basecnts[weaker])+';within_thresh')
                 
@@ -97,5 +98,5 @@ for line in sys.stdin:
             logwrite(line, mm_basecnts, ';'.join([hap1_mm_basecnts['warning'], hap2_mm_basecnts['warning'], weaker+':+'+str(int(diff))]))
 
 
-rm_hetSNV_f.close()
+if mode != 'adjust': rm_hetSNV_f.close()
 log.close()
