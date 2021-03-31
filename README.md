@@ -5,7 +5,7 @@
 
 
 
-``
+```
 wgs_bam_file=genotyping_HTS/ENCFF200XCY.bam
 
 
@@ -18,7 +18,7 @@ make -f ~/bin/AlleleSeq2/makePersonalGenome.mk \
         OUTPUT_DIR=pgenome_ENC-003 \
         FILE_PATH_BAM=${wgs_bam_file} \
         FILE_PATH_VCF=enc003.spliced.scrubbed.vcf 
-``
+```
 
 
 
