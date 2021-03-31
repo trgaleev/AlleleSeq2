@@ -29,7 +29,7 @@ r1=ENCFF337ZBN.fastq.gz
   
 r2=ENCFF481IQE.fastq.gz  
 
-pgenome=../../../../pgenomes_20180726/pgenome_ENC-003
+pgenome=../../../../pgenomes_20191127/pgenome_ENC-003
 
 make -f ~/bin/AlleleSeq2/PIPELINE.mk \
         PGENOME_DIR=${pgenome} \
@@ -55,6 +55,8 @@ make -f ~/bin/AlleleSeq2/PIPELINE.mk \
 ## (2) Pool two replicates, if available ###
 
 ```
+pgenome=../../../../pgenomes_20191127/pgenome_ENC-003
+
 make -f ~/bin/AlleleSeq2/PIPELINE_aggregated_counts.mk \
         PGENOME_DIR=${pgenome} \
         INPUT_UNIQ_READS_PILEUP_FILES="../ENCSR238ZZD_ENCFF719MSG_1_ENCFF120MML_2_1_1/ENCFF719MSG_ENCFF120MML_hap1_uniqreads.mpileup    ../ENCSR238ZZD_ENCFF719MSG_1_ENCFF120MML_2_1_1/ENCFF719MSG_ENCFF120MML_hap2_uniqreads.mpileup ../ENCSR238ZZD_ENCFF337ZBN_1_ENCFF481IQE_2_1_1/ENCFF337ZBN_ENCFF481IQE_hap1_uniqreads.mpileup ../ENCSR238ZZD_ENCFF337ZBN_1_ENCFF481IQE_2_1_1/ENCFF337ZBN_ENCFF481IQE_hap2_uniqreads.mpileup" \
@@ -73,7 +75,7 @@ make -f ~/bin/AlleleSeq2/PIPELINE_aggregated_counts.mk \
 ```
 make -f ~/bin/AlleleSeq2/PIPELINE_aggregate_over_genomic_regions.mk \
 	  PREFIX=ENCSR238ZZD \
-	  REGIONS_FILE="../../../../pgenomes_20180726/gencode.v24_prot_coding_genes.bed" \
+	  REGIONS_FILE="../../../../pgenomes_20191127/gencode.v24_all_genes.bed" \
 	  COUNTS_FILE=../ENCSR238ZZD_combined/ENCSR238ZZD_filtered_counts.tsv \
 	  UNIQ_ALN_FILES='../ENCSR238ZZD_ENCFF719MSG_1_ENCFF120MML_2_1_1/ENCFF719MSG_ENCFF120MML_ASE-params_crdsorted_uniqreads_over_hetSNVs.bam ../ENCSR238ZZD_ENCFF337ZBN_1_ENCFF481IQE_2_1_1/ENCFF337ZBN_ENCFF481IQE_ASE-params_crdsorted_uniqreads_over_hetSNVs.bam' \
 	  MMAP_ALN_FILES='../ENCSR238ZZD_ENCFF719MSG_1_ENCFF120MML_2_1_1/ENCFF719MSG_ENCFF120MML_ASE-params_crdsorted_mmapreads_over_hetSNVs.bam ../ENCSR238ZZD_ENCFF337ZBN_1_ENCFF481IQE_2_1_1/ENCFF337ZBN_ENCFF481IQE_ASE-params_crdsorted_mmapreads_over_hetSNVs.bam' \
