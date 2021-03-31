@@ -1,7 +1,7 @@
-## AlleleSeq2
+# AlleleSeq2
 ![alt text](docs/workflow.png)
 
-### Generate personal genomes, star indices and other helper files:
+## Generate personal genomes, star indices and other helper files:
 
 
 
@@ -21,11 +21,13 @@ make -f ~/bin/AlleleSeq2/makePersonalGenome.mk \
 
 
 
-### (1) Call ASE hetSNVs from a single sample ###
+## (1) Call ASE hetSNVs from a single sample ###
 
 
-r1=ENCFF337ZBN.fastq.gz 
-r2=ENCFF481IQE.fastq.gz 
+r1=ENCFF337ZBN.fastq.gz
+  
+r2=ENCFF481IQE.fastq.gz  
+
 pgenome=../../../../pgenomes_20180726/pgenome_ENC-003
 
 make -f ~/bin/AlleleSeq2/PIPELINE.mk \
@@ -42,14 +44,14 @@ make -f ~/bin/AlleleSeq2/PIPELINE.mk \
         VCF_SAMPLE_ID=sge_Aug_encodev2_2_local
 
 
-# the main output containing ASE hetSNVs is 
-# ENCFF337ZBN_ENCFF481IQE_interestingHets.FDR-0.10.betabinom.chrs1-22.6-tot_0-min_cnt.tsv
+#### the main output containing ASE hetSNVs is 
+#### ENCFF337ZBN_ENCFF481IQE_interestingHets.FDR-0.10.betabinom.chrs1-22.6-tot_0-min_cnt.tsv
 
 
 
 
 
-### (2) Pool two replicates, if available ###
+## (2) Pool two replicates, if available ###
 
 
 make -f ~/bin/AlleleSeq2/PIPELINE_aggregated_counts.mk \
@@ -61,11 +63,11 @@ make -f ~/bin/AlleleSeq2/PIPELINE_aggregated_counts.mk \
         VCF_SAMPLE_ID=sge_Aug_encodev2_2_local
 
 
-# main output file: ENCSR238ZZD_interestingHets.FDR-0.10.binom.chrs1-22.6-tot_0-min_cnt.tsv
+#### main output file: ENCSR238ZZD_interestingHets.FDR-0.10.binom.chrs1-22.6-tot_0-min_cnt.tsv
 
 
 
-### (3) Aggregate across genomic elements, e.g. genes. ### 
+## (3) Aggregate across genomic elements, e.g. genes. ### 
 
 
 make -f ~/bin/AlleleSeq2/PIPELINE_aggregate_over_genomic_regions.mk \
@@ -78,8 +80,8 @@ make -f ~/bin/AlleleSeq2/PIPELINE_aggregate_over_genomic_regions.mk \
 
 
 
-# all input files should be produced from (1) or (2)
+#### all input files should be produced from (1) or (2)
 
-#  REGIONS_FILE -- must be a bed file: e.g., gene name and coordinates
+####  REGIONS_FILE -- must be a bed file: e.g., gene name and coordinates
 
-# main output file with ASE genes: ENCSR238ZZD_interesting_regions.FDR-0.10.betabinom.chrs1-22.6-tot_0-min_cnt.tsv 
+#### main output file with ASE genes: ENCSR238ZZD_interesting_regions.FDR-0.10.betabinom.chrs1-22.6-tot_0-min_cnt.tsv 
