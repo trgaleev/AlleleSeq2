@@ -24,7 +24,7 @@ make -f ~/bin/AlleleSeq2/makePersonalGenome.mk \
 
 ## (1) Call ASE hetSNVs from a single sample ###
 
-
+```
 r1=ENCFF337ZBN.fastq.gz
   
 r2=ENCFF481IQE.fastq.gz  
@@ -43,7 +43,7 @@ make -f ~/bin/AlleleSeq2/PIPELINE.mk \
         FDR_CUTOFF=0.10 \
 	      PERFORM_FASTQC=off \
         VCF_SAMPLE_ID=sge_Aug_encodev2_2_local
-
+```
 
 #### the main output containing ASE hetSNVs is 
 #### ENCFF337ZBN_ENCFF481IQE_interestingHets.FDR-0.10.betabinom.chrs1-22.6-tot_0-min_cnt.tsv
@@ -54,7 +54,7 @@ make -f ~/bin/AlleleSeq2/PIPELINE.mk \
 
 ## (2) Pool two replicates, if available ###
 
-
+```
 make -f ~/bin/AlleleSeq2/PIPELINE_aggregated_counts.mk \
         PGENOME_DIR=${pgenome} \
         INPUT_UNIQ_READS_PILEUP_FILES="../ENCSR238ZZD_ENCFF719MSG_1_ENCFF120MML_2_1_1/ENCFF719MSG_ENCFF120MML_hap1_uniqreads.mpileup    ../ENCSR238ZZD_ENCFF719MSG_1_ENCFF120MML_2_1_1/ENCFF719MSG_ENCFF120MML_hap2_uniqreads.mpileup ../ENCSR238ZZD_ENCFF337ZBN_1_ENCFF481IQE_2_1_1/ENCFF337ZBN_ENCFF481IQE_hap1_uniqreads.mpileup ../ENCSR238ZZD_ENCFF337ZBN_1_ENCFF481IQE_2_1_1/ENCFF337ZBN_ENCFF481IQE_hap2_uniqreads.mpileup" \
@@ -62,7 +62,7 @@ make -f ~/bin/AlleleSeq2/PIPELINE_aggregated_counts.mk \
         PREFIX=ENCSR238ZZD \
         FDR_CUTOFF=0.10 \
         VCF_SAMPLE_ID=sge_Aug_encodev2_2_local
-
+```
 
 #### main output file: ENCSR238ZZD_interestingHets.FDR-0.10.binom.chrs1-22.6-tot_0-min_cnt.tsv
 
@@ -70,7 +70,7 @@ make -f ~/bin/AlleleSeq2/PIPELINE_aggregated_counts.mk \
 
 ## (3) Aggregate across genomic elements, e.g. genes. ### 
 
-
+```
 make -f ~/bin/AlleleSeq2/PIPELINE_aggregate_over_genomic_regions.mk \
 	  PREFIX=ENCSR238ZZD \
 	  REGIONS_FILE="../../../../pgenomes_20180726/gencode.v24_prot_coding_genes.bed" \
@@ -78,7 +78,7 @@ make -f ~/bin/AlleleSeq2/PIPELINE_aggregate_over_genomic_regions.mk \
 	  UNIQ_ALN_FILES='../ENCSR238ZZD_ENCFF719MSG_1_ENCFF120MML_2_1_1/ENCFF719MSG_ENCFF120MML_ASE-params_crdsorted_uniqreads_over_hetSNVs.bam ../ENCSR238ZZD_ENCFF337ZBN_1_ENCFF481IQE_2_1_1/ENCFF337ZBN_ENCFF481IQE_ASE-params_crdsorted_uniqreads_over_hetSNVs.bam' \
 	  MMAP_ALN_FILES='../ENCSR238ZZD_ENCFF719MSG_1_ENCFF120MML_2_1_1/ENCFF719MSG_ENCFF120MML_ASE-params_crdsorted_mmapreads_over_hetSNVs.bam ../ENCSR238ZZD_ENCFF337ZBN_1_ENCFF481IQE_2_1_1/ENCFF337ZBN_ENCFF481IQE_ASE-params_crdsorted_mmapreads_over_hetSNVs.bam' \
 	  FDR_CUTOFF=0.10  
-
+```
 
 
 #### all input files should be produced from (1) or (2)
