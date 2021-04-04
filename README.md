@@ -81,6 +81,6 @@ make -f ~/bin/AlleleSeq2/PIPELINE_aggregate_over_genomic_regions.mk \
 
 #### all input files should be produced from (1) or (2)
 
-####  REGIONS_FILE -- must be a bed file: e.g., coordinates and gene name
+####  REGIONS_FILE: must be a bed file: with gene(region) coordinates and id
 
 #### main output file with ASE genes: ENCSR238ZZD_interesting_regions.FDR-0.10.betabinom.chrs1-22.6-tot_0-min_cnt.tsv 
