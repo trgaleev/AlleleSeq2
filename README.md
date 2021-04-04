@@ -1,5 +1,5 @@
 # AlleleSeq2
-![alt text](docs/workflow.png)
+#![alt text](docs/workflow.png)
 
 ## Generate personal genomes, STAR indices and other helper files:
 
