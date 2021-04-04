@@ -1,7 +1,7 @@
 # AlleleSeq2
 ![alt text](docs/workflow.png)
 
-## Generate personal genomes, star indices and other helper files:
+## Generate personal genomes, STAR indices and other helper files:
 
 
 
@@ -12,7 +12,6 @@ wgs_bam_file=genotyping_HTS/ENCFF200XCY.bam
 make -f ~/bin/AlleleSeq2/makePersonalGenome.mk \
         N_THREADS=8 \
         ALIGNER=STAR \
-        STAR_limitGenomeGenerateRAM=90000000000 \
         VCF_SAMPLE_ID=sge_Aug_encodev2_2_local \
         REFGENOME_VERSION=GRCh38 \
         OUTPUT_DIR=pgenome_ENC-003 \
@@ -26,7 +25,6 @@ make -f ~/bin/AlleleSeq2/makePersonalGenome.mk \
 
 ```
 r1=ENCFF337ZBN.fastq.gz
-  
 r2=ENCFF481IQE.fastq.gz  
 
 pgenome=../../../../pgenomes_20191127/pgenome_ENC-003
@@ -41,8 +39,7 @@ make -f ~/bin/AlleleSeq2/PIPELINE.mk \
         ALIGNMENT_MODE=ASE \
         RM_DUPLICATE_READS=on \
         FDR_CUTOFF=0.10 \
-	      PERFORM_FASTQC=off \
-        VCF_SAMPLE_ID=sge_Aug_encodev2_2_local
+	VCF_SAMPLE_ID=sge_Aug_encodev2_2_local
 ```
 
 #### the main output containing ASE hetSNVs is 
@@ -85,6 +82,6 @@ make -f ~/bin/AlleleSeq2/PIPELINE_aggregate_over_genomic_regions.mk \
 
 #### all input files should be produced from (1) or (2)
 
-####  REGIONS_FILE -- must be a bed file: e.g., gene name and coordinates
+####  REGIONS_FILE -- must be a bed file: e.g., coordinates and gene name
 
 #### main output file with ASE genes: ENCSR238ZZD_interesting_regions.FDR-0.10.betabinom.chrs1-22.6-tot_0-min_cnt.tsv 
