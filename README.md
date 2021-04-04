@@ -34,7 +34,7 @@ make -f ~/bin/AlleleSeq2/PIPELINE.mk \
         NTHR=8 \
         READS_R1=${r1} \
         READS_R2=${r2} \
-        STAR_readFIlesCommand=zcat \
+        STAR_readFilesCommand=zcat \
         ALIGNMENT_MODE=ASE \
         RM_DUPLICATE_READS=on \
         FDR_CUTOFF=0.10 \
