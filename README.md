@@ -48,7 +48,7 @@ make -f ~/bin/AlleleSeq2/PIPELINE.mk \
 
 
 
-## (2) Pool two replicates, if available ###
+## (2) Pool two replicates if available ###
 
 ```
 pgenome=../../../../pgenomes_20191127/pgenome_ENC-003
