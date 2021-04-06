@@ -45,8 +45,7 @@ all: $(PREFIX)_ref_allele_ratios.raw_counts.pdf $(PREFIX)_ref_allele_ratios.filt
 
 #all: $(PREFIX)_interestingHets.FDR-$(FDR_CUTOFF).betabinom.chrs1-22$(KEEP_CHR).$(Cntthresh_tot)-tot_$(Cntthresh_min)-min_cnt.tsv 
 
-#todo: this seems to work, but the way it deals with paths, filenames, etc needs to be cleaned up
-#currently, keeping JC's betabinomial scripts with as little modifications as possible
+#currently, keeping alleleDB betabinomial scripts with as little modifications as possible
 
 $(PREFIX)_interestingHets.FDR-$(FDR_CUTOFF).betabinom.chrs1-22$(KEEP_CHR).$(Cntthresh_tot)-tot_$(Cntthresh_min)-min_cnt.tsv: $(PREFIX)_filtered_counts.chrs1-22$(KEEP_CHR).$(Cntthresh_tot)-tot_$(Cntthresh_min)-min_cnt.tsv
 	Rscript $(PL)/alleledb_calcOverdispersion.R \

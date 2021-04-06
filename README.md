@@ -1,3 +1,4 @@
+``SAMTOOLS``: Samtools  
 # AlleleSeq2
 ![alt text](docs/pipeline_overview.png)
 ## Generate personal genomes, STAR indices and other helper files:
@@ -37,12 +38,12 @@ make -f makePersonalGenome.mk \
 ### Makefile options (can be specified in PIPELINE.mk or as command-line arguments):
 #### Dependencies:
 ##### python2 
-scipy
-numpy
-pandas
+scipy  
+numpy  
+pandas  
 ##### R
-VGAM
-ggplot2
+VGAM  
+ggplot2  
 #### Dependencies, system parameters/paths:
 ``PL``: path to AlleleSeq2  
 ``SAMTOOLS``: samtools  
@@ -54,7 +55,7 @@ ggplot2
 #### Other options:  
 ``READS_R1``: path to input .fastq file (R1)  
 ``READS_R2``: path to input .fastq file (R2, if PE sequencing)  
-``PGENOME_DIR``: path to personal genome folder from (1)  
+``PGENOME_DIR``: path to personal genome folder  
 ``VCF_SAMPLE_ID``: sample name in VCF  
 ``ALIGNMENT_MODE``: 'ASE' for RNA-seq, 'ASB' for ChIP-seq' and 'ASCA' for ATAC-seq  
 ``RM_DUPLICATE_READS``: 'on' to remove duplicate reads with picard tools  
@@ -67,7 +68,7 @@ ggplot2
 
  
 
-### Example   
+### Example:
 ```
 make -f PIPELINE.mk \
         PGENOME_DIR=pgenome_ENC-003 \
@@ -87,13 +88,24 @@ ENCFF337ZBN_ENCFF481IQE_interestingHets.FDR-0.10.betabinom.chrs1-22.6-tot_0-min_
 
 
 
-## (2) Pool two replicates if available 
+## (2) Pool replicates / tissues
+
+### Makefile options (can be specified in PIPELINE_aggregated_counts.mk or as command-line arguments)
+#### Dependencies, system parameters/paths:  
+``PL``: path to AlleleSeq2  
+``PGENOME_DIR``: path to personal genome folder 
+``VCF_SAMPLE_ID``: sample name in VCF  
+``INPUT_UNIQ_READS_PILEUP_FILES``: list of .mpileup files with uniquely mapped reads to aggregate generated in (1) 
+``INPUT_MMAP_READS_PILEUP_FILES``: list of .mpileup files with multi-mapping reads to aggregate generated in (1) 
+``PREFIX``: prefix for output file names 
+``Cntthresh_tot``: threshold for the total number of reads mapped to hetSNV  
+``Cntthresh_min``: threshold for the minimal number of reads mapped to each allele  
+
 
 ```
-pgenome=../../../../pgenomes_20191127/pgenome_ENC-003
 
-make -f ~/bin/AlleleSeq2/PIPELINE_aggregated_counts.mk \
-        PGENOME_DIR=${pgenome} \
+make -f PIPELINE_aggregated_counts.mk \
+        PGENOME_DIR=pgenome_ENC-003 \
         INPUT_UNIQ_READS_PILEUP_FILES="../ENCSR238ZZD_ENCFF719MSG_1_ENCFF120MML_2_1_1/ENCFF719MSG_ENCFF120MML_hap1_uniqreads.mpileup    ../ENCSR238ZZD_ENCFF719MSG_1_ENCFF120MML_2_1_1/ENCFF719MSG_ENCFF120MML_hap2_uniqreads.mpileup ../ENCSR238ZZD_ENCFF337ZBN_1_ENCFF481IQE_2_1_1/ENCFF337ZBN_ENCFF481IQE_hap1_uniqreads.mpileup ../ENCSR238ZZD_ENCFF337ZBN_1_ENCFF481IQE_2_1_1/ENCFF337ZBN_ENCFF481IQE_hap2_uniqreads.mpileup" \
         INPUT_MMAP_READS_PILEUP_FILES="../ENCSR238ZZD_ENCFF719MSG_1_ENCFF120MML_2_1_1/ENCFF719MSG_ENCFF120MML_hap1_mmapreads.mpileup ../ENCSR238ZZD_ENCFF719MSG_1_ENCFF120MML_2_1_1/ENCFF719MSG_ENCFF120MML_hap2_mmapreads.mpileup ../ENCSR238ZZD_ENCFF337ZBN_1_ENCFF481IQE_2_1_1/ENCFF337ZBN_ENCFF481IQE_hap1_mmapreads.mpileup ../ENCSR238ZZD_ENCFF337ZBN_1_ENCFF481IQE_2_1_1/ENCFF337ZBN_ENCFF481IQE_hap2_mmapreads.mpileup" \
         PREFIX=ENCSR238ZZD \
