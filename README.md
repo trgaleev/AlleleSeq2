@@ -2,7 +2,7 @@
 ![alt text](docs/pipeline_overview.png)
 ## Generate personal genomes, STAR indices and other helper files:
 
-### Makefile options (can be specified in makePersonalGenome.mk or as command-line arguments)
+### Makefile options (can be specified in ``makePersonalGenome.mk`` or as command-line arguments)
 #### Dependencies, system parameters/paths:  
 ``VCF2DIPLOID_DIR``: vcf2diploid (available from http://alleleseq.gersteinlab.org/tools.html)  
 ``PL``: path to AlleleSeq2  
