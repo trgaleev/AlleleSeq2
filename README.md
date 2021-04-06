@@ -34,7 +34,7 @@ make -f makePersonalGenome.mk \
 
 
 ## (1) Calling AS hetSNVs from a single sample
-### Makefile options (can be specified in PIPELINE.mk or as command-line arguments):
+### Makefile options (can be specified in ``PIPELINE.mk`` or as command-line arguments):
 #### Dependencies:
 ##### python2 
 scipy  
@@ -89,7 +89,7 @@ ENCFF337ZBN_ENCFF481IQE_interestingHets.FDR-0.10.betabinom.chrs1-22.6-tot_0-min_
 
 ## (2) Pool replicates/tissues
 
-### Makefile options (can be specified in PIPELINE_aggregate_over_genomic_regions.mk or as command-line arguments)
+### Makefile options (can be specified in ``PIPELINE_aggregate_over_genomic_regions.mk`` or as command-line arguments)
 #### Dependencies, system parameters/paths:  
 ``PL``: path to AlleleSeq2   
 ``PGENOME_DIR``: path to personal genome folder  
@@ -117,9 +117,9 @@ The main output file: ENCSR238ZZD_interestingHets.FDR-0.10.binom.chrs1-22.6-tot_
 
 
 
-## (3) Aggregate across genomic elements, e.g. genes.
+## (3) Aggregate across genomic elements
 
-### Makefile options (can be specified in PIPELINE_aggregated_counts.mk or as command-line arguments)
+### Makefile options (can be specified in ``PIPELINE_aggregated_counts.mk`` or as command-line arguments)
 #### Dependencies, system parameters/paths:  
 ``PL``: path to AlleleSeq2   
 ``BEDTOOLS_intersectBed``: Bedtools intersectBed   
@@ -145,4 +145,4 @@ make -f   PIPELINE_aggregate_over_genomic_regions.mk \
 	  FDR_CUTOFF=0.10  
 ```
 
-The main output file with ASE genes: ENCSR238ZZD_interesting_regions.FDR-0.10.betabinom.chrs1-22.6-tot_0-min_cnt.tsv   
+The main output file with AS genomic elements: ENCSR238ZZD_interesting_regions.FDR-0.10.betabinom.chrs1-22.6-tot_0-min_cnt.tsv   
