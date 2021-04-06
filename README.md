@@ -5,13 +5,13 @@
 ### Makefile options (can be specified in makePersonalGenome.mk or as command-line arguments)
 #### Dependencies, system parameters/paths:  
 ``VCF2DIPLOID_DIR``: vcf2diploid (http://alleleseq.gersteinlab.org/tools.html)  
+``PL``: path to AlleleSeq2  
 ``LIFTOVER``: UCSC liftOver tool  
 ``BEDTOOLS_intersectBed``: Bedtools intersectBed   
 ``SAMTOOLS``: Samtools  
 ``STAR``: STAR aligner  
 
 #### Other options:
-``PL``: path to AlleleSeq2  
 ``N_THREADS``: number or threads (for STAR genomeGenerate)  
 ``REFGENOME_VERSION``: reference genome version, 'GRCh37' or 'GRCh38'  
 ``REFGENOME``: path to the reference genome .fasta file  
@@ -35,7 +35,15 @@ make -f makePersonalGenome.mk \
 
 ## (1) Calling AS+ hetSNVs from a single sample
 ### Makefile options (can be specified in PIPELINE.mk or as command-line arguments):
-#### Dependencies, system parameters/paths:  
+#### Dependencies:
+##### python2 
+scipy
+numpy
+pandas
+##### R
+VGAM
+ggplot2
+#### Dependencies, system parameters/paths:
 ``PL``: path to AlleleSeq2  
 ``SAMTOOLS``: samtools  
 ``PICARD``: Broad picard tools  
@@ -43,9 +51,7 @@ make -f makePersonalGenome.mk \
 ``FASTQC``: FastQC quality control tool  
 ``CUTADAPT``: Cutadapt to remove adapter sequences (ATAC-seq samples)
 
-
 #### Other options:  
-``PL``: path to AlleleSeq2   
 ``READS_R1``: path to input .fastq file (R1)  
 ``READS_R2``: path to input .fastq file (R2, if PE sequencing)  
 ``PGENOME_DIR``: path to personal genome folder from (1)  
