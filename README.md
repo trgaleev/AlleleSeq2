@@ -2,8 +2,8 @@
 ![alt text](docs/workflow.png)
 ## Generate personal genomes, STAR indices and other helper files:
 
-####makefile OPTIONs (can be specified in makePersonalGenome.mk or as command-line arguments)
-#####Dependencies, system paramenters specifying paths:
+#### makefile OPTIONs (can be specified in makePersonalGenome.mk or as command-line arguments)
+##### Dependencies, system paramenters specifying paths:
 VCF2DIPLOID_DIR: vcf2diploid (http://alleleseq.gersteinlab.org/tools.html)
 LIFTOVER: UCSC liftOver tool
 BEDTOOLS_intersectBed: bedtools intersectBed 
@@ -11,7 +11,7 @@ SAMTOOLS: samtools
 BEDTOOLS_intersectBed: STAR aligner
 python2
 
-######Other OPTIONs
+###### Other OPTIONs
 PL: path to AlleleSeq2
 N_THREADS: number or threads (for STAR genomeGenerate)
 REFGENOME_VERSION: reference genome version, 'GRCh37' or 'GRCh38'
@@ -21,7 +21,7 @@ VCF_SAMPLE_ID: sample name in VCF
 FILE_PATH_BAM: path to WGS bam
 OUTPUT_DIR: output folder
 
-####example 
+#### Example 
 ```
 
 
