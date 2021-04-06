@@ -1,20 +1,36 @@
 # AlleleSeq2
-
+![alt text](docs/workflow.png)
 ## Generate personal genomes, STAR indices and other helper files:
 
+####makefile OPTIONs (can be specified in makePersonalGenome.mk or as command-line arguments)
+#####Dependencies, system paramenters specifying paths:
+VCF2DIPLOID_DIR: vcf2diploid (http://alleleseq.gersteinlab.org/tools.html)
+LIFTOVER: UCSC liftOver tool
+BEDTOOLS_intersectBed: bedtools intersectBed 
+SAMTOOLS: samtools
+BEDTOOLS_intersectBed: STAR aligner
+python2
 
+######Other OPTIONs
+PL: path to AlleleSeq2
+N_THREADS: number or threads (for STAR genomeGenerate)
+REFGENOME_VERSION: reference genome version, 'GRCh37' or 'GRCh38'
+REFGENOME: path to the reference genome .fasta file
+FILE_PATH_VCF: path to VCF
+VCF_SAMPLE_ID: sample name in VCF
+FILE_PATH_BAM: path to WGS bam
+OUTPUT_DIR: output folder
 
+####example 
 ```
-wgs_bam_file=genotyping_HTS/ENCFF200XCY.bam
 
 
-make -f ~/bin/AlleleSeq2/makePersonalGenome.mk \
+make -f makePersonalGenome.mk \
         N_THREADS=8 \
-        ALIGNER=STAR \
         VCF_SAMPLE_ID=sge_Aug_encodev2_2_local \
         REFGENOME_VERSION=GRCh38 \
         OUTPUT_DIR=pgenome_ENC-003 \
-        FILE_PATH_BAM=${wgs_bam_file} \
+        FILE_PATH_BAM=ENCFF200XCY.bam \
         FILE_PATH_VCF=enc003.spliced.scrubbed.vcf 
 ```
 
