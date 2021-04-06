@@ -33,7 +33,7 @@ make -f makePersonalGenome.mk \
 
 
 
-## Calling AS hetSNVs from a single sample
+## (1) Calling AS hetSNVs from a single sample
 ### Makefile options (can be specified in PIPELINE.mk or as command-line arguments):
 #### Dependencies:
 ##### python2 
