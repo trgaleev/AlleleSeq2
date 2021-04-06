@@ -6,16 +6,14 @@
 ### system / executables ##
 
 PL                               := ~/bin/AlleleSeq2
-#BOWTIE1                          := ~/bin/bowtie-1.1.1/bowtie
 NTHR                             := 1 # multithread, works for mapping, sorting, fastqc
 SAMTOOLS                         := ~/bin/samtools-1.3.1/samtools
 PICARD                           := ~/bin/picard-tools-2.1.1/picard.jar
-#JAVA                             := ~/bin/jre1.8.0_77/bin/java
 JAVA                             := java
 JAVA_MEM                         := 80g
 STAR                             := ~/bin/STAR/STAR-2.6.0c/bin/Linux_x86_64/STAR
 FASTQC                           := fastqc
-CUTADAPT                         := ~/.local/bin/cutadapt
+CUTADAPT                         := ~/bin/cutadapt
 
 ### input files / paths ##
 
@@ -56,8 +54,6 @@ STAR_parameters_file                     := $(PL)/STAR_custom_parameters_sample_
 R1_ADAPTER_SEQ                           := CTGTCTCTTATA
 R2_ADAPTER_SEQ                           := CTGTCTCTTATA
 # for ASCA, Nextera and transposase adapter sequences trimming, similar to what ENCODE prototype peak calling pipeline finds in ENTEx samples
-# and discussion in https://www.biostars.org/p/215988/
-# #todo: incorporate more general adapter detection step
 
 # stats / counts params:
 
@@ -127,8 +123,7 @@ $(info $(empty_string))
 all: $(FASTQC_out) $(PREFIX)_ref_allele_ratios.raw_counts.pdf $(PREFIX)_ref_allele_ratios.filtered_counts.pdf $(PREFIX)_ref_allele_ratios.filtered_counts.chrs1-22$(KEEP_CHR).$(Cntthresh_tot)-tot_$(Cntthresh_min)-min.pdf $(PREFIX)_interestingHets.FDR-$(FDR_CUTOFF).binom.chrs1-22$(KEEP_CHR).$(Cntthresh_tot)-tot_$(Cntthresh_min)-min_cnt.tsv $(PREFIX)_interestingHets.FDR-$(FDR_CUTOFF).betabinom.chrs1-22$(KEEP_CHR).$(Cntthresh_tot)-tot_$(Cntthresh_min)-min_cnt.tsv 
 
 
-#todo: this seems to work, but the way it deals with paths, filenames, etc needs to be cleaned up
-#currently, keeping JC's betabinomial scripts with as little modifications as possible
+#currently, keeping alleleDB betabinomial scripts with as few modifications as possible
 
 $(PREFIX)_interestingHets.FDR-$(FDR_CUTOFF).betabinom.chrs1-22$(KEEP_CHR).$(Cntthresh_tot)-tot_$(Cntthresh_min)-min_cnt.tsv: $(PREFIX)_filtered_counts.chrs1-22$(KEEP_CHR).$(Cntthresh_tot)-tot_$(Cntthresh_min)-min_cnt.tsv
 	Rscript $(PL)/alleledb_calcOverdispersion.R \
@@ -328,45 +323,9 @@ $(READS_R1).trimmed.fastq.gz $(READS_R2).trimmed.fastq.gz: $(READS_R1) $(READS_R
 	-p $(READS_R2).trimmed.fastq.gz \
 	$(READS_R1) $(READS_R2)
 	$(FASTQC) --threads $(NTHR) $(READS_R1).trimmed.fastq.gz $(READS_R2).trimmed.fastq.gz
-# #todo: check if cutadapt will work with multiple $(NTHR) with python3
 
 
 $(FASTQC_out): $(READS_R1)
 	$(FASTQC) --threads $(NTHR) $(READS_R1) $(READS_R2)
 
 
-# * --outFilterMultimapScoreRange default =1 works fine for making sure read mapping to the right allele with one hetSNV gets a higher score
-# 	and treated as uniquely mapped: the score diff between a perfectly mapped read and one with one mismatch is 2 (with --scoreGenomicLengthLog2scale 0.0):
-# 	one less mapped base and -1 for mismatch?
-#
-
-
-
-## opts similar to AlleleSeq v1.2a bowtie1 -v 2 -m 1 mode
-#$(PREFIX)_STAR_mode-0_uniqonly.Aligned.sortedByCoord.out.bam: $(READS)
-#	$(STAR) \
-#	--runThreadN $(NTHR) \
-#	--genomeDir $(GenomeIdx_STAR_diploid) \
-#	--readFilesIn $< \
-#	--readFilesCommand $(STAR_readFilesCommand) \
-#	--outFileNamePrefix $(@:Aligned.sortedByCoord.out.bam=) \
-#	--outSAMattributes All \
-#	--outFilterMultimapNmax 1 \
-#	--outFilterMismatchNmax 2 \
-#	--alignEndsType EndToEnd \
-#	--scoreDelOpen -100 \
-#	--scoreInsOpen -100 \
-#	--scoreGap -100 \
-#	--scoreGenomicLengthLog2scale 0.0 \
-#	--sjdbScore 0 \
-#	--outSAMtype BAM SortedByCoordinate
-#	$(SAMTOOLS) flagstat $@ > $@.stat
-#	$(SAMTOOLS) index $@	
-
-## this doesn't seem to work for some reason - observing strange read alignments with the large index
-#$(PREFIX)_bowtie1_uniqonly_coordsorted.bam: $(READS)
-#	zcat $(READS) | \
-#	$(BOWTIE1) -S -p $(NTHR) --best --strata -v 2 -m 1 $(GenomeIdx_bowtie_diploid) --large-index - | \
-#	$(SAMTOOLS) view -F 0x04 -b - | \
-#	$(SAMTOOLS) sort - -o $@
-#	$(SAMTOOLS) flagstat $@ > $@.stat
