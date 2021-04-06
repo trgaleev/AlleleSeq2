@@ -1,25 +1,24 @@
 # AlleleSeq2
-![alt text](docs/workflow.png)
+![alt text](docs/pipeline_overview.png)
 ## Generate personal genomes, STAR indices and other helper files:
 
-#### makefile OPTIONs (can be specified in makePersonalGenome.mk or as command-line arguments)
-##### Dependencies, system paramenters specifying paths:
-VCF2DIPLOID_DIR: vcf2diploid (http://alleleseq.gersteinlab.org/tools.html)
-LIFTOVER: UCSC liftOver tool
-BEDTOOLS_intersectBed: bedtools intersectBed 
-SAMTOOLS: samtools
-BEDTOOLS_intersectBed: STAR aligner
-python2
+### Makefile OPTIONs (can be specified in makePersonalGenome.mk or as command-line arguments)
+#### Dependencies, system paramenters specifying paths:  
+VCF2DIPLOID_DIR: vcf2diploid (http://alleleseq.gersteinlab.org/tools.html)  
+LIFTOVER: UCSC liftOver tool  
+BEDTOOLS_intersectBed: bedtools intersectBed   
+SAMTOOLS: samtools  
+BEDTOOLS_intersectBed: STAR aligner  
 
-###### Other OPTIONs
-PL: path to AlleleSeq2
-N_THREADS: number or threads (for STAR genomeGenerate)
-REFGENOME_VERSION: reference genome version, 'GRCh37' or 'GRCh38'
-REFGENOME: path to the reference genome .fasta file
-FILE_PATH_VCF: path to VCF
-VCF_SAMPLE_ID: sample name in VCF
-FILE_PATH_BAM: path to WGS bam
-OUTPUT_DIR: output folder
+###### Other OPTIONs  
+PL: path to AlleleSeq2  
+N_THREADS: number or threads (for STAR genomeGenerate)  
+REFGENOME_VERSION: reference genome version, 'GRCh37' or 'GRCh38'  
+REFGENOME: path to the reference genome .fasta file  
+FILE_PATH_VCF: path to VCF  
+VCF_SAMPLE_ID: sample name in VCF  
+FILE_PATH_BAM: path to WGS bam  
+OUTPUT_DIR: output folder  
 
 #### Example 
 ```
