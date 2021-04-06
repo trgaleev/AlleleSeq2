@@ -1,11 +1,10 @@
-``SAMTOOLS``: Samtools  
 # AlleleSeq2
 ![alt text](docs/pipeline_overview.png)
 ## Generate personal genomes, STAR indices and other helper files:
 
 ### Makefile options (can be specified in makePersonalGenome.mk or as command-line arguments)
 #### Dependencies, system parameters/paths:  
-``VCF2DIPLOID_DIR``: vcf2diploid (http://alleleseq.gersteinlab.org/tools.html)  
+``VCF2DIPLOID_DIR``: vcf2diploid (available from http://alleleseq.gersteinlab.org/tools.html)  
 ``PL``: path to AlleleSeq2  
 ``LIFTOVER``: UCSC liftOver tool  
 ``BEDTOOLS_intersectBed``: Bedtools intersectBed   
@@ -34,7 +33,7 @@ make -f makePersonalGenome.mk \
 
 
 
-## Calling AS+ hetSNVs from a single sample
+## Calling AS hetSNVs from a single sample
 ### Makefile options (can be specified in PIPELINE.mk or as command-line arguments):
 #### Dependencies:
 ##### python2 
@@ -90,7 +89,7 @@ ENCFF337ZBN_ENCFF481IQE_interestingHets.FDR-0.10.betabinom.chrs1-22.6-tot_0-min_
 
 ## (2) Pool replicates/tissues
 
-### Makefile options (can be specified in PIPELINE_aggregated_counts.mk or as command-line arguments)
+### Makefile options (can be specified in PIPELINE_aggregate_over_genomic_regions.mk or as command-line arguments)
 #### Dependencies, system parameters/paths:  
 ``PL``: path to AlleleSeq2   
 ``PGENOME_DIR``: path to personal genome folder  
