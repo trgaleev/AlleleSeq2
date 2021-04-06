@@ -5,20 +5,20 @@
 ### Makefile options (can be specified in makePersonalGenome.mk or as command-line arguments)
 #### Dependencies, system parameters/paths:  
 ``VCF2DIPLOID_DIR``: vcf2diploid (http://alleleseq.gersteinlab.org/tools.html)  
-LIFTOVER: UCSC liftOver tool  
-BEDTOOLS_intersectBed: bedtools intersectBed   
-SAMTOOLS: samtools  
-STAR: STAR aligner  
+``LIFTOVER``: UCSC liftOver tool  
+``BEDTOOLS_intersectBed``: Bedtools intersectBed   
+``SAMTOOLS``: Samtools  
+``STAR``: STAR aligner  
 
 #### Other options:
-PL: path to AlleleSeq2  
-N_THREADS: number or threads (for STAR genomeGenerate)  
-REFGENOME_VERSION: reference genome version, 'GRCh37' or 'GRCh38'  
-REFGENOME: path to the reference genome .fasta file  
-FILE_PATH_VCF: path to VCF  
-VCF_SAMPLE_ID: sample name in VCF  
-FILE_PATH_BAM: path to WGS bam  
-OUTPUT_DIR: output folder  
+``PL``: path to AlleleSeq2  
+``N_THREADS``: number or threads (for STAR genomeGenerate)  
+``REFGENOME_VERSION``: reference genome version, 'GRCh37' or 'GRCh38'  
+``REFGENOME``: path to the reference genome .fasta file  
+``FILE_PATH_VCF``: path to VCF  
+``VCF_SAMPLE_ID``: sample name in VCF  
+``FILE_PATH_BAM``: path to WGS bam  
+``OUTPUT_DIR``: output folder  
 
 ### Example: 
 ```
@@ -35,29 +35,29 @@ make -f makePersonalGenome.mk \
 
 ## (1) Calling AS+ hetSNVs from a single sample
 ### Makefile options (can be specified in PIPELINE.mk or as command-line arguments):
-#### Dependencies, system paramenters/paths:  
-PL: path to AlleleSeq2  
-SAMTOOLS: samtools  
-PICARD: Broad picard tools  
-STAR: STAR aligner
-FASTQC: FastQC quality control tool  
-CUTADAPT: Cutadapt to remove adapter sequences (ATAC-seq samples)
+#### Dependencies, system parameters/paths:  
+``PL``: path to AlleleSeq2  
+``SAMTOOLS``: samtools  
+``PICARD``: Broad picard tools  
+``STAR``: STAR aligner
+``FASTQC``: FastQC quality control tool  
+``CUTADAPT``: Cutadapt to remove adapter sequences (ATAC-seq samples)
 
 
 #### Other options:  
-PL: path to AlleleSeq2   
-READS_R1: path to input .fastq file (R1)  
-READS_R2: path to input .fastq file (R2, if PE sequencing)  
-PGENOME_DIR: path to personal genome folder from (1)  
-VCF_SAMPLE_ID: sample name in VCF  
-ALIGNMENT_MODE: 'ASE' for RNA-seq, 'ASB' for ChIP-seq' and 'ASCA' for ATAC-seq  
-RM_DUPLICATE_READS: 'on' to remove duplicate reads with picard tools  
-STAR_readFilesCommand: --readFilesIn option in STAR  
-REFGENOME_VERSION: reference genome version, 'GRCh37' or 'GRCh38'  
-Annotation_diploid: path to diploid GENCODE gene annotation  
-FDR_CUTOFF: FDR threshold  
-Cntthresh_tot: threshold for the total number of reads mapped to hetSNV  
-Cntthresh_min: threshold for the minimal number of reads mapped to each allele  
+``PL``: path to AlleleSeq2   
+``READS_R1``: path to input .fastq file (R1)  
+``READS_R2``: path to input .fastq file (R2, if PE sequencing)  
+``PGENOME_DIR``: path to personal genome folder from (1)  
+``VCF_SAMPLE_ID``: sample name in VCF  
+``ALIGNMENT_MODE``: 'ASE' for RNA-seq, 'ASB' for ChIP-seq' and 'ASCA' for ATAC-seq  
+``RM_DUPLICATE_READS``: 'on' to remove duplicate reads with picard tools  
+``STAR_readFilesCommand``: --readFilesIn option in STAR  
+``REFGENOME_VERSION``: reference genome version, 'GRCh37' or 'GRCh38'  
+``Annotation_diploid``: path to diploid GENCODE gene annotation (for 'ASE')  
+``FDR_CUTOFF``: FDR threshold  
+``Cntthresh_tot``: threshold for the total number of reads mapped to hetSNV  
+``Cntthresh_min``: threshold for the minimal number of reads mapped to each allele  
 
  
 
