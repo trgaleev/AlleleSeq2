@@ -20,10 +20,8 @@ If there are multiple bam files (e.g. replicates of the same assay), the script 
 
 prefix.sorted.merged_hap_uniq.bedgraph --- this is the read coverage on both haplotypes, using coordinates in the personal genome
 
-prefix.sorted.hapXonref.bedgraph --- read coverage of haplotype X, using coordinates in the reference genome
+prefix.hapXonref.bedgraph --- read coverage of haplotype X, using coordinates in the reference genome
 
-prefix.sorted.hapXonref.bigwig --- same as above, but in bigwig format
+prefix.hapXonref.bigwig --- same as above, but in bigwig format
 
-prefix.binned.hapX.bedgraph --- average read coverage of bins of 2.5 Mb of haplotype X, using coordinates in the reference genome
-
-prefix.Haplotype1.txt --- file used by the chromosome painting tool
+prefix.HaplotypeX.txt, prefix.HaplotypeX.bedgraph --- files used by the chromosome painting tool
