@@ -53,9 +53,8 @@ all:$(PREFIX)_hap1_allele_ratios.region_filtered_counts.chrs1-22$(KEEP_CHR).$(Cn
 
 
 # todo: this seems to work, but the way it deals with paths, filenames, etc needs to be cleaned up
-# currently, keeping JC's betabinomial scripts with as little modifications as possible
-# here it is even worse
-# fix columns
+# currently, keeping alleleDB betabinomial scripts with as little modifications as possible
+# fix columns and all the workaround with the .tmp files
 $(PREFIX)_interesting_regions.FDR-$(FDR_CUTOFF).betabinom.chrs1-22$(KEEP_CHR).$(Cntthresh_tot)-tot_$(Cntthresh_min)-min_cnt.tsv: $(PREFIX)_region_filtered_counts.chrs1-22$(KEEP_CHR).$(Cntthresh_tot)-tot_$(Cntthresh_min)-min_cnt.tsv
 	awk '{print $$1"\t"$$2"\t"$$3"\t"$$2"\t"$$3"\t0\t0\t"$$2+$$3"\t"$$4"\t1.0"}' $< | \
 		sed 's/hap1_count\thap2_count\t0\t0\t0/cA\tcC\tcG\tcT\tsum_ref_n_alt_cnts/' | \
@@ -76,7 +75,6 @@ $(PREFIX)_interesting_regions.FDR-$(FDR_CUTOFF).betabinom.chrs1-22$(KEEP_CHR).$(
 	#rm $(PREFIX)_region_filtered_counts_min.$(Cntthresh_tot)-tot.$(Cntthresh_min)-min.tsv.tmp \
 	#	$(PREFIX)_region_FDR-$(FDR_CUTOFF).betabinom.chrs1-22$(KEEP_CHR).$(Cntthresh_tot)-tot_$(Cntthresh_min)-min_cnt.tmp
 
-# todo fix colnames
 $(PREFIX)_interesting_regions.FDR-$(FDR_CUTOFF).binom.chrs1-22$(KEEP_CHR).$(Cntthresh_tot)-tot_$(Cntthresh_min)-min_cnt.tsv: $(PREFIX)_region_filtered_counts.chrs1-22$(KEEP_CHR).$(Cntthresh_tot)-tot_$(Cntthresh_min)-min_cnt.tsv
 	python $(PL)/FalsePos_regions.py $< $(FDR_SIMS) $(FDR_CUTOFF) > $(PREFIX)_region_FDR-$(FDR_CUTOFF).binom.chrs1-22$(KEEP_CHR).$(Cntthresh_tot)-tot_$(Cntthresh_min)-min_cnt.txt
 	cat $< | python $(PL)/filter_regions_by_pval.py $(PREFIX)_region_FDR-$(FDR_CUTOFF).binom.chrs1-22$(KEEP_CHR).$(Cntthresh_tot)-tot_$(Cntthresh_min)-min_cnt.txt > $@
@@ -111,10 +109,6 @@ $(PREFIX)_region_raw_counts_mmap.tsv: hets_regions_hap2.bed
 $(PREFIX)_hap1_allele_ratios.region_raw_counts.pdf: $(PREFIX)_region_raw_counts_uniq.tsv
 	Rscript $(PL)/plot_AllelicRatio_distribution.R $< $(PREFIX) region_raw_counts hap1_allele_ratio
 
-# allowing multiple UNIQ_ALN_FILES files, but probably slower (since became -b instead of -a), also changes to intersect2counts.py to accomodate output file format
-#$(PREFIX)_region_counts.tsv: hets_regions_hap1.bed hets_regions_hap2.bed
-#        $(BEDTOOLS_intersectBed) -a $(UNIQ_ALN_FILES) -b hets_regions_hap1.bed hets_regions_hap2.bed -split -wb -bed | \
-#                python $(PL)/intersect2counts.py > $@
 
 
 # -split -- not counting reads that splice over a het
