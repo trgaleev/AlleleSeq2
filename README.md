@@ -92,14 +92,15 @@ ENCFF337ZBN_ENCFF481IQE_interestingHets.FDR-0.10.betabinom.chrs1-22.6-tot_0-min_
 
 ### Makefile options (can be specified in PIPELINE_aggregated_counts.mk or as command-line arguments)
 #### Dependencies, system parameters/paths:  
-``PL``: path to AlleleSeq2  
-``PGENOME_DIR``: path to personal genome folder 
-``VCF_SAMPLE_ID``: sample name in VCF  
-``INPUT_UNIQ_READS_PILEUP_FILES``: list of .mpileup files with uniquely mapped reads to aggregate generated in (1) 
-``INPUT_MMAP_READS_PILEUP_FILES``: list of .mpileup files with multi-mapping reads to aggregate generated in (1) 
-``PREFIX``: prefix for output file names 
-``Cntthresh_tot``: threshold for the total number of reads mapped to hetSNV  
-``Cntthresh_min``: threshold for the minimal number of reads mapped to each allele  
+``PL``: path to AlleleSeq2   
+``PGENOME_DIR``: path to personal genome folder  
+``VCF_SAMPLE_ID``: sample name in VCF   
+#### Other options: 
+``INPUT_UNIQ_READS_PILEUP_FILES``: list of .mpileup files with uniquely mapped reads to aggregate generated in (1)   
+``INPUT_MMAP_READS_PILEUP_FILES``: list of .mpileup files with multi-mapping reads to aggregate generated in (1)   
+``PREFIX``: prefix for output file names   
+``Cntthresh_tot``: threshold for the total number of reads mapped to hetSNV    
+``Cntthresh_min``: threshold for the minimal number of reads mapped to each allele   
 
 
 ```
