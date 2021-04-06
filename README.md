@@ -4,7 +4,7 @@
 
 ### Makefile options (can be specified in makePersonalGenome.mk or as command-line arguments)
 #### Dependencies, system parameters/paths:  
-VCF2DIPLOID_DIR: vcf2diploid (http://alleleseq.gersteinlab.org/tools.html)  
+``VCF2DIPLOID_DIR``: vcf2diploid (http://alleleseq.gersteinlab.org/tools.html)  
 LIFTOVER: UCSC liftOver tool  
 BEDTOOLS_intersectBed: bedtools intersectBed   
 SAMTOOLS: samtools  
