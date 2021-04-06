@@ -84,3 +84,5 @@ make -f ~/bin/AlleleSeq2/PIPELINE_aggregate_over_genomic_regions.mk \
 ####  REGIONS_FILE: must be a bed file: with gene(region) coordinates and id
 
 #### main output file with ASE genes: ENCSR238ZZD_interesting_regions.FDR-0.10.betabinom.chrs1-22.6-tot_0-min_cnt.tsv 
+
+### (4) Additional scripts to calculate hap-specific read coverage are provided under the directory calc_read_coverage 
