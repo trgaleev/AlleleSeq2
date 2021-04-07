@@ -10,7 +10,7 @@ The output will count the number of AS SNPs in the catalog from the query.
 
 Example:
 ```
-bash query_snp.sh hetSNVs_default_AS.tsv H3K27ac ENC-001 Spleen
+bash query_snp.sh hetSNVs_default_AS.tsv H3K27ac ENC-001 spleen
 ```
 
 To print the help information:
