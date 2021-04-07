@@ -1,5 +1,5 @@
 if [[ $# -eq 0 ]] ; then
-    printf "Querying the hetSNV catalog.\nPlease enter the path to the input file, followed by at most three of the following types of keywords:\n      Assay (e.g. H3K27ac)\n      Individual (e.g. ENC-001)\n      Tissue (e.g. spleen)\nThe output will count the number of AS SNPs in the catalog from the query.\n"
+    printf "Querying the ENTEx AS catalog.\nPlease enter the path to the input file, followed by at most three of the following types of keywords:\n      Assay (e.g. H3K27ac)\n      Individual (e.g. ENC-001)\n      Tissue (e.g. spleen)\nThe output will count the number of AS SNPs in the catalog from the query.\n"
     exit 0
 fi
 
