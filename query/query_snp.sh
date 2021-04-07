@@ -10,4 +10,4 @@ q3="$4"
 
 
 echo "Querying $q1|$q2|$q3 on file $f"
-grep "$q1" $f --color=never | grep "$q2" --color=never | grep "$q3" --color=never | awk '{print $1,$2,$4,$NF}' | sort | uniq |  awk '{if($NF==1) print $0}'
+grep "$q1" $f --color=never | grep "$q2" --color=never | grep "$q3" --color=never | awk '{if($NF==1) print $1,$2,$4,$NF}' | sort | uniq 
