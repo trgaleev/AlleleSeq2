@@ -1,4 +1,4 @@
-This script is for querying of the ENTEx AS catalog.
+This script is for querying the ENTEx AS catalog.
 Please enter the path to the input file, followed by at most three of the following types of keywords:
       Assay (e.g. H3K27ac)
       Individual (e.g. ENC-001)
