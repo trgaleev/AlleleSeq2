@@ -129,7 +129,7 @@ The main output file is ENCSR238ZZD_interestingHets.FDR-0.10.betabinom.chrs1-22.
 ``Cntthresh_tot``: threshold for the total number of reads mapped to hetSNV     
 ``Cntthresh_min``: threshold for the minimal number of reads mapped to each allele     
 ``FDR_CUTOFF``: FDR threshold
-``COUNTS_FILE``: filtered read count file generated in (1) or (2)
+``COUNTS_FILE``: filtered read count file generated in (1) or (2). 
 ``REGIONS_FILE``: path to a .bed file with genomic elments (e.g. gene, cCRE) coordinates  
 ``UNIQ_ALN_FILES``: .bam(s) with uniquely mapping reads generated in (1)    
 ``MMAP_ALN_FILES``: .bam(s) with multimapping reads generated in (1)  
