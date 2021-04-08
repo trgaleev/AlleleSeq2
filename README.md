@@ -150,3 +150,4 @@ The main output file listing AS genomic elements is ENCSR238ZZD_interesting_regi
 
 ## (4) Additional scripts to calculate hap-specific read coverage are provided under the directory calc_read_coverage 
 
+## (5) Scripts to query the ENTEx catalog are provided under the directory query
