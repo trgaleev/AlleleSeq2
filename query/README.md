@@ -1,4 +1,4 @@
-This script is for querying the ENTEx AS catalog.
+This script is for querying the ENTEx AS catalog (http://entex.gersteinlab.org/data/hetSNVs_default_AS.tsv).
 
 Please enter the path to the input file, followed by at most three of the following types of keywords:
 
